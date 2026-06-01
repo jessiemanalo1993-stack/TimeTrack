@@ -156,12 +156,13 @@ router.put('/:id/approve', authMiddleware, async (req, res) => {
       {
         employee_id: leave.employee_id,
         date: leave.date,
+        shift_date: leave.date,
         time_in: null,
         status: 'On Leave',
         leave_type: leave.leave_type,
         notes: leave.reason || null,
       },
-      { onConflict: 'employee_id,date' }
+      { onConflict: 'employee_id,shift_date' }
     );
 
   if (attError) {
