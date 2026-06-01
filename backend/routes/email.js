@@ -1,11 +1,9 @@
 const router = require('express').Router();
 const ExcelJS = require('exceljs');
-const { Resend } = require('resend');
+const axios = require('axios');
 const supabase = require('../supabase');
 const authMiddleware = require('../middleware/auth');
 const { todayLocal, formatTime12 } = require('../utils/time');
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // POST /api/email/send-report — admin only
 router.post('/send-report', authMiddleware, async (req, res) => {
@@ -161,21 +159,30 @@ router.post('/send-report', authMiddleware, async (req, res) => {
 </body>
 </html>`;
 
-  // 6. Send to all employees
-  const toAddresses = employees.map(e => e.email);
+  // 6. Send via Brevo
+  const toAddresses = employees.map(e => ({ email: e.email, name: e.name }));
+  const emailSubject = subject || `Attendance Report — ${dateLabel}`;
+  const fromEmail = process.env.BREVO_FROM_EMAIL || 'noreply@example.com';
+  const fromName = process.env.BREVO_FROM_NAME || 'TimeTrack';
 
   try {
-    await resend.emails.send({
-      from: process.env.RESEND_FROM || 'TimeTrack <onboarding@resend.dev>',
+    await axios.post('https://api.brevo.com/v3/smtp/email', {
+      sender: { email: fromEmail, name: fromName },
       to: toAddresses,
-      subject: subject || `Attendance Report — ${dateLabel}`,
-      html: emailHtml,
-      attachments: [{ filename, content: base64 }],
+      subject: emailSubject,
+      htmlContent: emailHtml,
+      attachment: [{ name: filename, content: base64 }],
+    }, {
+      headers: {
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+      },
     });
 
-    res.json({ success: true, sent_to: toAddresses.length, recipients: toAddresses });
+    res.json({ success: true, sent_to: toAddresses.length, recipients: toAddresses.map(e => e.email) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    const msg = err.response?.data?.message || err.message;
+    res.status(500).json({ error: msg });
   }
 });
 
