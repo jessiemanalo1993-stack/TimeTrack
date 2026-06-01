@@ -228,13 +228,12 @@ export default function Employees() {
               </div>
               <div style={{ marginBottom: '20px' }}>
                 <label style={labelStyle}>
-                  {modal === 'edit' ? 'Reset Password' : 'Password *'}
-                  {modal === 'edit' && <span style={{ color: 'var(--ink-3)', fontWeight: '400', marginLeft: '4px' }}>(leave blank to keep current)</span>}
+                  {modal === 'edit' ? 'Reset Password' : 'Password'}
+                  <span style={{ color: 'var(--ink-3)', fontWeight: '400', marginLeft: '4px' }}>(optional — employee can set their own)</span>
                 </label>
                 <input type="password" value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                  placeholder={modal === 'edit' ? 'Enter new password to reset' : 'Min 6 characters'}
-                  required={modal === 'create'}
+                  placeholder={modal === 'edit' ? 'Enter new password to reset' : 'Leave blank for employee to set'}
                   minLength={6}
                   style={inputStyle}
                   onFocus={e => e.target.style.borderColor = 'var(--ink)'}

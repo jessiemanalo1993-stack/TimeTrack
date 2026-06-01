@@ -64,16 +64,17 @@ router.post('/', async (req, res) => {
   if (!name || !email || !shift_start || !shift_end || !work_days?.length) {
     return res.status(400).json({ error: 'name, email, shift_start, shift_end, and work_days are required' });
   }
-  if (!password || password.length < 6) {
+  if (password && password.length < 6) {
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Invalid email format' });
   }
-  const password_hash = await bcrypt.hash(password, 10);
+  const insertData = { name: name.trim(), email: email.toLowerCase().trim(), shift_start, shift_end, work_days };
+  if (password) insertData.password_hash = await bcrypt.hash(password, 10);
   const { data, error } = await supabase
     .from('employees')
-    .insert({ name: name.trim(), email: email.toLowerCase().trim(), shift_start, shift_end, work_days, password_hash })
+    .insert(insertData)
     .select()
     .single();
   if (error) {
