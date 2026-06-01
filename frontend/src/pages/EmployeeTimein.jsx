@@ -243,9 +243,9 @@ export default function EmployeeTimein() {
         </div>
 
         <p className="animate-fade-up" style={{ textAlign: 'center', fontSize: '11px', color: 'var(--ink-3)', marginTop: '20px', fontFamily: 'var(--mono)', animationDelay: '0.4s' }}>
-          Admin?{' '}
+          Manager?{' '}
           <a href="/admin/login" style={{ color: 'var(--ink-2)', textDecoration: 'underline' }}>
-            Sign in to admin panel
+            Sign in to Manager Panel
           </a>
         </p>
       </div>
