@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const bcrypt = require('bcryptjs');
+const supabase = require('./supabase');
 
 const app = express();
 
@@ -44,4 +46,23 @@ app.use('/api/leave', require('./routes/leave'));
 app.get('/api/health', (_, res) => res.json({ status: 'ok', app: 'TimeTrack' }));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`TimeTrack backend running on port ${PORT}`));
+app.listen(PORT, async () => {
+  console.log(`TimeTrack backend running on port ${PORT}`);
+
+  // Seed first manager from env vars if managers table is empty
+  const username = (process.env.ADMIN_USERNAME || '').trim().toLowerCase();
+  const password = (process.env.ADMIN_PASSWORD || '').trim();
+  if (!username || !password) return;
+
+  const { data: existing } = await supabase.from('managers').select('id').limit(1);
+  if (existing && existing.length > 0) return;
+
+  const password_hash = await bcrypt.hash(password, 10);
+  const { error } = await supabase.from('managers').insert({
+    name: username,
+    username,
+    password_hash,
+  });
+  if (error) console.error('Seed manager failed:', error.message);
+  else console.log(`First manager seeded: ${username}`);
+});
