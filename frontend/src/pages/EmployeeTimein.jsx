@@ -228,7 +228,13 @@ export default function EmployeeTimein() {
                     onFocus={e => e.target.style.borderColor = 'var(--ink)'}
                     onBlur={e => e.target.style.borderColor = 'var(--line)'}
                   />
-                  <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '5px 0 0' }}>First time? Your password will be set automatically.</p>
+                  <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '5px 0 0' }}>
+                    First time? Your password will be set automatically.{' '}
+                    <span
+                      style={{ color: 'var(--ink-2)', textDecoration: 'underline', cursor: 'pointer' }}
+                      onClick={() => switchMode('setpassword')}
+                    >Forgot password?</span>
+                  </p>
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
@@ -321,8 +327,11 @@ export default function EmployeeTimein() {
                     onFocus={e => e.target.style.borderColor = 'var(--ink)'}
                     onBlur={e => e.target.style.borderColor = 'var(--line)'}
                   />
+                  <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '5px 0 0' }}>
+                    <span style={{ color: 'var(--ink-2)', textDecoration: 'underline', cursor: 'pointer' }} onClick={() => switchMode('setpassword')}>Forgot password?</span>
+                    {' '}Contact your manager to reset.
+                  </p>
                 </div>
-
                 <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Leave Date</label>
                   <input type="date" value={leaveDate} onChange={e => setLeaveDate(e.target.value)}
@@ -421,6 +430,10 @@ export default function EmployeeTimein() {
                     onFocus={e => e.target.style.borderColor = 'var(--ink)'}
                     onBlur={e => e.target.style.borderColor = 'var(--line)'}
                   />
+                  <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '5px 0 0' }}>
+                    <span style={{ color: 'var(--ink-2)', textDecoration: 'underline', cursor: 'pointer' }} onClick={() => switchMode('setpassword')}>Forgot password?</span>
+                    {' '}Contact your manager to reset.
+                  </p>
                 </div>
 
                 {timeoutError && (
@@ -490,6 +503,9 @@ export default function EmployeeTimein() {
                     onFocus={e => e.target.style.borderColor = 'var(--ink)'}
                     onBlur={e => e.target.style.borderColor = 'var(--line)'}
                   />
+                  <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '5px 0 0' }}>
+                    If you forgot your current password, contact your manager to reset it.
+                  </p>
                 </div>
 
                 <div style={{ marginBottom: '16px' }}>
