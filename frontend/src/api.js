@@ -63,4 +63,13 @@ export const api = {
 
   // Email
   sendReport: (params) => request('POST', '/api/email/send-report', params, true),
+
+  // Leave Requests
+  fileLeave: (data) => request('POST', '/api/leave', data),
+  getLeaveRequests: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request('GET', `/api/leave${qs ? '?' + qs : ''}`, null, true);
+  },
+  approveLeave: (id) => request('PUT', `/api/leave/${id}/approve`, null, true),
+  rejectLeave: (id) => request('PUT', `/api/leave/${id}/reject`, null, true),
 };

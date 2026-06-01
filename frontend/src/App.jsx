@@ -9,6 +9,7 @@ import Dashboard from './pages/admin/Dashboard';
 import Employees from './pages/admin/Employees';
 import Attendance from './pages/admin/Attendance';
 import Reports from './pages/admin/Reports';
+import LeaveRequests from './pages/admin/LeaveRequests';
 
 function TitleManager() {
   const { pathname } = useLocation();
@@ -53,6 +54,11 @@ export default function App() {
           <Route path="/admin/reports" element={
             <ProtectedRoute>
               <AdminLayout><Reports /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/leave" element={
+            <ProtectedRoute>
+              <AdminLayout><LeaveRequests /></AdminLayout>
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />

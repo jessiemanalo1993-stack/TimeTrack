@@ -6,6 +6,7 @@ const navLinks = [
   { to: '/admin', label: 'Dashboard' },
   { to: '/admin/employees', label: 'Employees' },
   { to: '/admin/attendance', label: 'Attendance' },
+  { to: '/admin/leave', label: 'Leave Requests' },
   { to: '/admin/reports', label: 'Reports' },
 ];
 

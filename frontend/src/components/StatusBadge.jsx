@@ -3,6 +3,9 @@ const colors = {
   Late:      'border-amber-500 text-amber-700 bg-white',
   Absent:    'border-red-500 text-red-700 bg-white',
   'On Leave':'border-indigo-500 text-indigo-700 bg-white',
+  Approved:  'border-green-600 text-green-700 bg-white',
+  Rejected:  'border-red-500 text-red-700 bg-white',
+  Pending:   'border-gray-400 text-gray-500 bg-white',
 };
 
 export default function StatusBadge({ status }) {

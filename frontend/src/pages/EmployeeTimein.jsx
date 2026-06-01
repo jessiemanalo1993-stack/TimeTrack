@@ -15,7 +15,26 @@ const inputStyle = {
   transition: 'border-color 0.15s',
 };
 
+const locationBtnStyle = (selected) => ({
+  padding: '10px 8px',
+  border: selected ? '1px solid var(--ink)' : '1px solid var(--line)',
+  background: selected ? 'var(--ink)' : 'var(--bg)',
+  color: selected ? 'var(--bg)' : 'var(--ink-2)',
+  fontSize: '11px',
+  cursor: 'pointer',
+  borderRadius: '2px',
+  fontFamily: 'var(--font)',
+  fontWeight: selected ? '600' : '400',
+  transition: 'all 0.15s',
+  textAlign: 'center',
+});
+
+const todayManila = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+
 export default function EmployeeTimein() {
+  const [mode, setMode] = useState('timein'); // 'timein' | 'leave'
+
+  // Time-in state
   const [email, setEmail] = useState('');
   const [workLocation, setWorkLocation] = useState('');
   const [leaveType, setLeaveType] = useState('');
@@ -23,23 +42,58 @@ export default function EmployeeTimein() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  // Leave request state
+  const [leaveEmail, setLeaveEmail] = useState('');
+  const [leaveDate, setLeaveDate] = useState('');
+  const [leaveRequestType, setLeaveRequestType] = useState('');
+  const [leaveReason, setLeaveReason] = useState('');
+  const [leaveLoading, setLeaveLoading] = useState(false);
+  const [leaveResult, setLeaveResult] = useState(null);
+  const [leaveError, setLeaveError] = useState('');
+
+  function switchMode(m) {
+    setMode(m);
     setError('');
+    setLeaveError('');
     setResult(null);
-    setLoading(true);
+    setLeaveResult(null);
+  }
+
+  async function handleTimein(e) {
+    e.preventDefault();
+    setError(''); setResult(null); setLoading(true);
     try {
       const data = await api.timein(email.trim(), workLocation, leaveType || undefined);
       setResult(data);
-      setEmail('');
-      setWorkLocation('');
-      setLeaveType('');
+      setEmail(''); setWorkLocation(''); setLeaveType('');
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   }
+
+  async function handleLeaveSubmit(e) {
+    e.preventDefault();
+    setLeaveError(''); setLeaveResult(null); setLeaveLoading(true);
+    try {
+      const data = await api.fileLeave({
+        email: leaveEmail.trim(),
+        date: leaveDate,
+        leave_type: leaveRequestType,
+        reason: leaveReason.trim() || undefined,
+      });
+      setLeaveResult(data);
+      setLeaveEmail(''); setLeaveDate(''); setLeaveRequestType(''); setLeaveReason('');
+    } catch (err) {
+      setLeaveError(err.message);
+    } finally {
+      setLeaveLoading(false);
+    }
+  }
+
+  const timeinDisabled = loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType);
+  const leaveDisabled = leaveLoading || !leaveEmail || !leaveDate || !leaveRequestType;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
@@ -54,158 +108,79 @@ export default function EmployeeTimein() {
 
         {/* Panel */}
         <div className="animate-rotate-in" style={{ border: '1px solid var(--line)', background: 'var(--bg)', borderRadius: '2px' }}>
-          {/* Panel header rule */}
+          {/* Panel header */}
           <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '14px 20px', textAlign: 'center' }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)' }}>
-              {result ? 'Time-In Recorded' : 'This is a prototype'}
+              {result ? 'Time-In Recorded' : leaveResult ? 'Leave Submitted' : 'This is a prototype'}
             </span>
           </div>
 
+          {/* Mode toggle — only show when no result */}
+          {!result && !leaveResult && (
+            <div style={{ borderBottom: '1px solid var(--line)', padding: '12px 20px', display: 'flex', gap: '8px' }}>
+              {[
+                { key: 'timein', label: 'Time In' },
+                { key: 'leave', label: 'File Leave' },
+              ].map(({ key, label }) => {
+                const active = mode === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => switchMode(key)}
+                    style={{
+                      padding: '6px 14px',
+                      border: active ? '1px solid var(--ink)' : '1px solid var(--line)',
+                      background: active ? 'var(--ink)' : 'var(--bg)',
+                      color: active ? 'var(--bg)' : 'var(--ink-3)',
+                      fontSize: '11px',
+                      fontFamily: 'var(--mono)',
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      borderRadius: '2px',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div style={{ padding: '24px 20px' }}>
-            {result ? (
-              <div className="animate-fade-up">
-                {/* Status indicator */}
-                <div style={{
-                  borderLeft: `3px solid ${result.status === 'Present' ? 'var(--present)' : 'var(--late)'}`,
-                  paddingLeft: '14px',
-                  marginBottom: '24px',
-                }}>
-                  <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>{result.name}</p>
-                  <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>{result.email}</p>
-                </div>
 
-                <div style={{ marginBottom: '20px' }}>
-                  <StatusBadge status={result.status} />
-                </div>
-
-                {/* Details grid */}
-                <div style={{ borderTop: '1px solid var(--line-2)' }}>
-                  {[
-                    { label: 'Login Time', value: result.time_in_formatted, mono: true },
-                    { label: 'Scheduled Start', value: result.scheduled_start_formatted, mono: true },
-                    { label: 'Date', value: result.date, mono: true },
-                    ...(result.work_location ? [{ label: 'Location', value: result.work_location, mono: false }] : []),
-                    ...(result.leave_type ? [{ label: 'Leave Type', value: result.leave_type, mono: false }] : []),
-                  ].map(({ label, value, mono }) => (
-                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--line-2)' }}>
-                      <span style={{ fontSize: '12px', color: 'var(--ink-3)' }}>{label}</span>
-                      <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--ink)', fontFamily: mono ? 'var(--mono)' : 'var(--font)' }}>
-                        {value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {result.status === 'Late' && (
-                  <p style={{ fontSize: '12px', color: 'var(--late)', marginTop: '16px', fontFamily: 'var(--mono)' }}>
-                    ↑ Arrived after scheduled start time
-                  </p>
-                )}
-
-                <button
-                  onClick={() => setResult(null)}
-                  style={{
-                    marginTop: '20px',
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid var(--line)',
-                    background: 'var(--bg)',
-                    color: 'var(--ink-2)',
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                    borderRadius: '2px',
-                    fontFamily: 'var(--font)',
-                    transition: 'border-color 0.15s, color 0.15s',
-                  }}
-                  onMouseEnter={e => { e.target.style.borderColor = 'var(--ink)'; e.target.style.color = 'var(--ink)'; }}
-                  onMouseLeave={e => { e.target.style.borderColor = 'var(--line)'; e.target.style.color = 'var(--ink-2)'; }}
-                >
-                  Record another
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit}>
+            {/* ── TIME IN mode ── */}
+            {mode === 'timein' && !result && (
+              <form onSubmit={handleTimein}>
                 <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>
-                    Work Email
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="you@company.com"
-                    required
-                    autoFocus
-                    style={inputStyle}
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Work Email</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    placeholder="you@company.com" required autoFocus style={inputStyle}
                     onFocus={e => e.target.style.borderColor = 'var(--ink)'}
                     onBlur={e => e.target.style.borderColor = 'var(--line)'}
                   />
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                    Work Location
-                  </label>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '8px' }}>Work Location</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                    {['Onsite', 'Work From Home', 'On Leave'].map(loc => {
-                      const selected = workLocation === loc;
-                      return (
-                        <button
-                          key={loc}
-                          type="button"
-                          onClick={() => { setWorkLocation(loc); setLeaveType(''); }}
-                          style={{
-                            padding: '10px 8px',
-                            border: selected ? '1px solid var(--ink)' : '1px solid var(--line)',
-                            background: selected ? 'var(--ink)' : 'var(--bg)',
-                            color: selected ? 'var(--bg)' : 'var(--ink-2)',
-                            fontSize: '11px',
-                            cursor: 'pointer',
-                            borderRadius: '2px',
-                            fontFamily: 'var(--font)',
-                            fontWeight: selected ? '600' : '400',
-                            transition: 'all 0.15s',
-                            textAlign: 'center',
-                          }}
-                        >
-                          {loc}
-                        </button>
-                      );
-                    })}
+                    {['Onsite', 'Work From Home', 'On Leave'].map(loc => (
+                      <button key={loc} type="button" onClick={() => { setWorkLocation(loc); setLeaveType(''); }}
+                        style={locationBtnStyle(workLocation === loc)}>{loc}</button>
+                    ))}
                   </div>
                 </div>
 
                 {workLocation === 'On Leave' && (
                   <div className="animate-slide-down" style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                      Leave Type
-                    </label>
+                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '8px' }}>Leave Type</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      {['Sick Leave', 'Vacation Leave', 'Emergency Leave', 'Other'].map(type => {
-                        const selected = leaveType === type;
-                        return (
-                          <button
-                            key={type}
-                            type="button"
-                            onClick={() => setLeaveType(type)}
-                            style={{
-                              padding: '10px 8px',
-                              border: selected ? '1px solid var(--ink)' : '1px solid var(--line)',
-                              background: selected ? 'var(--ink)' : 'var(--bg)',
-                              color: selected ? 'var(--bg)' : 'var(--ink-2)',
-                              fontSize: '11px',
-                              cursor: 'pointer',
-                              borderRadius: '2px',
-                              fontFamily: 'var(--font)',
-                              fontWeight: selected ? '600' : '400',
-                              transition: 'all 0.15s',
-                              textAlign: 'center',
-                            }}
-                          >
-                            {type}
-                          </button>
-                        );
-                      })}
+                      {['Sick Leave', 'Vacation Leave', 'Emergency Leave', 'Other'].map(type => (
+                        <button key={type} type="button" onClick={() => setLeaveType(type)}
+                          style={locationBtnStyle(leaveType === type)}>{type}</button>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -216,29 +191,140 @@ export default function EmployeeTimein() {
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType)}
-                  style={{
-                    width: '100%',
-                    padding: '11px',
-                    border: '1px solid var(--ink)',
-                    background: (loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType)) ? 'var(--line)' : 'var(--ink)',
-                    color: (loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType)) ? 'var(--ink-3)' : 'var(--bg)',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    cursor: (loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType)) ? 'not-allowed' : 'pointer',
-                    borderRadius: '2px',
-                    fontFamily: 'var(--mono)',
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    transition: 'all 0.15s',
-                  }}
-                >
+                <button type="submit" disabled={timeinDisabled}
+                  style={{ width: '100%', padding: '11px', border: '1px solid var(--ink)', background: timeinDisabled ? 'var(--line)' : 'var(--ink)', color: timeinDisabled ? 'var(--ink-3)' : 'var(--bg)', fontSize: '13px', fontWeight: '600', cursor: timeinDisabled ? 'not-allowed' : 'pointer', borderRadius: '2px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', transition: 'all 0.15s' }}>
                   {loading ? 'Recording...' : 'Time In →'}
                 </button>
               </form>
             )}
+
+            {/* ── TIME IN result ── */}
+            {mode === 'timein' && result && (
+              <div className="animate-fade-up">
+                <div style={{ borderLeft: `3px solid ${result.status === 'Present' ? 'var(--present)' : 'var(--late)'}`, paddingLeft: '14px', marginBottom: '24px' }}>
+                  <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>{result.name}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>{result.email}</p>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <StatusBadge status={result.status} />
+                </div>
+                <div style={{ borderTop: '1px solid var(--line-2)' }}>
+                  {[
+                    { label: 'Login Time', value: result.time_in_formatted, mono: true },
+                    { label: 'Scheduled Start', value: result.scheduled_start_formatted, mono: true },
+                    { label: 'Date', value: result.date, mono: true },
+                    ...(result.work_location ? [{ label: 'Location', value: result.work_location, mono: false }] : []),
+                    ...(result.leave_type ? [{ label: 'Leave Type', value: result.leave_type, mono: false }] : []),
+                  ].map(({ label, value, mono }) => (
+                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--line-2)' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--ink-3)' }}>{label}</span>
+                      <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--ink)', fontFamily: mono ? 'var(--mono)' : 'var(--font)' }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+                {result.status === 'Late' && (
+                  <p style={{ fontSize: '12px', color: 'var(--late)', marginTop: '16px', fontFamily: 'var(--mono)' }}>↑ Arrived after scheduled start time</p>
+                )}
+                <button onClick={() => setResult(null)}
+                  style={{ marginTop: '20px', width: '100%', padding: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink-2)', fontSize: '13px', cursor: 'pointer', borderRadius: '2px', fontFamily: 'var(--font)', transition: 'border-color 0.15s, color 0.15s' }}
+                  onMouseEnter={e => { e.target.style.borderColor = 'var(--ink)'; e.target.style.color = 'var(--ink)'; }}
+                  onMouseLeave={e => { e.target.style.borderColor = 'var(--line)'; e.target.style.color = 'var(--ink-2)'; }}>
+                  Record another
+                </button>
+              </div>
+            )}
+
+            {/* ── FILE LEAVE mode ── */}
+            {mode === 'leave' && !leaveResult && (
+              <form onSubmit={handleLeaveSubmit} className="animate-slide-down">
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Work Email</label>
+                  <input type="email" value={leaveEmail} onChange={e => setLeaveEmail(e.target.value)}
+                    placeholder="you@company.com" required autoFocus style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Leave Date</label>
+                  <input type="date" value={leaveDate} onChange={e => setLeaveDate(e.target.value)}
+                    min={todayManila()} required
+                    style={{ ...inputStyle, padding: '9px 10px' }}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '8px' }}>Leave Type</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    {['Sick Leave', 'Vacation Leave', 'Emergency Leave', 'Other'].map(type => (
+                      <button key={type} type="button" onClick={() => setLeaveRequestType(type)}
+                        style={locationBtnStyle(leaveRequestType === type)}>{type}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    Reason <span style={{ color: 'var(--ink-3)', fontWeight: '400' }}>(optional)</span>
+                  </label>
+                  <textarea value={leaveReason} onChange={e => setLeaveReason(e.target.value)}
+                    maxLength={300} rows={3} placeholder="Brief description..."
+                    style={{ ...inputStyle, resize: 'vertical', minHeight: '72px' }}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+
+                {leaveError && (
+                  <div style={{ borderLeft: '2px solid var(--absent)', paddingLeft: '10px', marginBottom: '16px' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--absent)', margin: 0 }}>{leaveError}</p>
+                  </div>
+                )}
+
+                <button type="submit" disabled={leaveDisabled}
+                  style={{ width: '100%', padding: '11px', border: '1px solid var(--ink)', background: leaveDisabled ? 'var(--line)' : 'var(--ink)', color: leaveDisabled ? 'var(--ink-3)' : 'var(--bg)', fontSize: '13px', fontWeight: '600', cursor: leaveDisabled ? 'not-allowed' : 'pointer', borderRadius: '2px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', transition: 'all 0.15s' }}>
+                  {leaveLoading ? 'Submitting...' : 'Submit Leave Request →'}
+                </button>
+              </form>
+            )}
+
+            {/* ── FILE LEAVE result ── */}
+            {mode === 'leave' && leaveResult && (
+              <div className="animate-fade-up">
+                <div style={{ borderLeft: '3px solid #4338ca', paddingLeft: '14px', marginBottom: '24px' }}>
+                  <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>{leaveResult.name}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>{leaveResult.email}</p>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <StatusBadge status="Pending" />
+                </div>
+                <div style={{ borderTop: '1px solid var(--line-2)' }}>
+                  {[
+                    { label: 'Leave Date', value: leaveResult.date, mono: true },
+                    { label: 'Leave Type', value: leaveResult.leave_type, mono: false },
+                    { label: 'Status', value: 'Pending Manager Approval', mono: false },
+                  ].map(({ label, value, mono }) => (
+                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--line-2)' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--ink-3)' }}>{label}</span>
+                      <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--ink)', fontFamily: mono ? 'var(--mono)' : 'var(--font)' }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--ink-3)', marginTop: '16px', fontFamily: 'var(--mono)' }}>
+                  Your request will be reviewed by the manager.
+                </p>
+                <button onClick={() => setLeaveResult(null)}
+                  style={{ marginTop: '20px', width: '100%', padding: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink-2)', fontSize: '13px', cursor: 'pointer', borderRadius: '2px', fontFamily: 'var(--font)', transition: 'border-color 0.15s, color 0.15s' }}
+                  onMouseEnter={e => { e.target.style.borderColor = 'var(--ink)'; e.target.style.color = 'var(--ink)'; }}
+                  onMouseLeave={e => { e.target.style.borderColor = 'var(--line)'; e.target.style.color = 'var(--ink-2)'; }}>
+                  File another
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
 
