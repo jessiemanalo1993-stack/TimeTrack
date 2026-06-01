@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,38 +7,19 @@
 * { box-sizing: border-box; }
 
 :root {
-  /* SAP Brand Colors */
-  --sap-blue: #0070F2;
-  --sap-blue-dark: #0040B0;
-  --sap-blue-light: #E8F3FF;
-  --sap-shell: #354A5E;
-
-  /* UI tokens */
-  --ink: #1D2D3E;
-  --ink-2: #4A5568;
-  --ink-3: #8896A9;
-  --line: #D9E2EC;
-  --line-2: #EEF2F7;
-  --bg: #FFFFFF;
-  --bg-2: #F5F7FA;
-  --bg-3: #EEF2F7;
-
-  /* Status */
-  --present: #188918;
-  --present-bg: #E8F5E8;
-  --late: #D97706;
-  --late-bg: #FEF3C7;
-  --absent: #CC1919;
-  --absent-bg: #FDECEA;
-  --leave: #0070F2;
-  --leave-bg: #E8F3FF;
-
-  --font: 'Inter', system-ui, sans-serif;
+  --ink: #111111;
+  --ink-2: #555555;
+  --ink-3: #999999;
+  --line: #e2e2e2;
+  --line-2: #f0f0f0;
+  --bg: #ffffff;
+  --bg-2: #fafafa;
+  --accent: #111111;
+  --present: #16a34a;
+  --late: #d97706;
+  --absent: #dc2626;
+  --font: 'DM Sans', system-ui, sans-serif;
   --mono: 'DM Mono', ui-monospace, monospace;
-  --radius: 8px;
-  --radius-sm: 6px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
 }
 
 body {
@@ -49,136 +30,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-input, select, textarea { font-family: var(--font); }
-
-/* ── Animations ─────────────────────────────── */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
-}
-@keyframes rotateIn {
-  from { opacity: 0; transform: perspective(600px) rotateY(-90deg) scale(0.9); }
-  to   { opacity: 1; transform: perspective(600px) rotateY(0deg) scale(1); }
-}
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-@keyframes checkmark {
-  from { stroke-dashoffset: 50; }
-  to   { stroke-dashoffset: 0; }
-}
-
-.animate-fade-in   { animation: fadeIn 0.35s ease forwards; }
-.animate-slide-down { animation: slideDown 0.25s ease forwards; }
-.animate-scale-in  { animation: scaleIn 0.25s ease forwards; }
-.animate-rotate-in { animation: rotateIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-
-.skeleton {
-  background: linear-gradient(90deg, var(--bg-3) 25%, var(--line-2) 50%, var(--bg-3) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite;
-  border-radius: var(--radius-sm);
-}
-
-/* ── SAP Card ────────────────────────────────── */
-.sap-card {
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-/* ── Buttons ─────────────────────────────────── */
-.sap-btn-primary {
-  background: var(--sap-blue);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 11px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
-  font-family: var(--font);
-  letter-spacing: 0.01em;
-}
-.sap-btn-primary:hover:not(:disabled) {
-  background: var(--sap-blue-dark);
-  box-shadow: 0 4px 12px rgba(0,112,242,0.35);
-}
-.sap-btn-primary:active:not(:disabled) { transform: translateY(1px); }
-.sap-btn-primary:disabled { background: var(--line); color: var(--ink-3); cursor: not-allowed; box-shadow: none; }
-
-.sap-btn-ghost {
-  background: transparent;
-  color: var(--sap-blue);
-  border: 1px solid var(--sap-blue);
-  border-radius: var(--radius-sm);
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
+/* Flat input baseline */
+input, select, textarea {
   font-family: var(--font);
 }
-.sap-btn-ghost:hover:not(:disabled) {
-  background: var(--sap-blue-light);
-  box-shadow: 0 2px 8px rgba(0,112,242,0.15);
-}
-
-.sap-btn-danger {
-  background: var(--absent);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  font-family: var(--font);
-}
-.sap-btn-danger:hover:not(:disabled) { background: #a31515; }
-.sap-btn-danger:active:not(:disabled) { transform: translateY(1px); }
-
-/* ── Inputs ──────────────────────────────────── */
-.sap-input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  color: var(--ink);
-  background: var(--bg);
-  outline: none;
-  font-family: var(--font);
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.sap-input:focus {
-  border-color: var(--sap-blue);
-  box-shadow: 0 0 0 3px rgba(0,112,242,0.12);
-}
-.sap-input::placeholder { color: var(--ink-3); }
-
-.sap-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-2);
-  margin-bottom: 6px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-/* ── Table ───────────────────────────────────── */
-.table-row-hover { transition: background 0.15s; cursor: default; }
-.table-row-hover:hover { background: var(--sap-blue-light) !important; }

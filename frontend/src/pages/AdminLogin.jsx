@@ -3,6 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 
+const inputStyle = {
+  width: '100%',
+  padding: '10px 12px',
+  border: '1px solid var(--line)',
+  borderRadius: '2px',
+  fontSize: '14px',
+  color: 'var(--ink)',
+  background: 'var(--bg)',
+  outline: 'none',
+  fontFamily: 'var(--font)',
+  transition: 'border-color 0.15s',
+};
+
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -13,80 +26,106 @@ export default function AdminLogin() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError(''); setLoading(true);
+    setError('');
+    setLoading(true);
     try {
       const { token } = await api.login(username, password);
       login(token);
       navigate('/admin');
-    } catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #1D2D3E 0%, #354A5E 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
-    }}>
-      <div className="animate-fade-in" style={{ width: '100%', maxWidth: '380px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+      <div style={{ width: '100%', maxWidth: '360px' }}>
 
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '96px', height: '96px', background: 'rgba(255,255,255,0.1)', borderRadius: '24px', marginBottom: '14px', backdropFilter: 'blur(8px)' }}>
-            <img src="/logo.png" alt="TimeTrack" style={{ width: '72px', height: '72px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#fff', margin: '0 0 4px', letterSpacing: '-0.01em' }}>
-            TimeTrack Console
-          </h1>
-          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', margin: 0, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-            Administrator Access
+        <div style={{ marginBottom: '36px' }}>
+          <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '6px' }}>
+            Admin Portal
           </p>
+          <h1 style={{ fontFamily: 'var(--mono)', fontSize: '22px', fontWeight: '500', color: 'var(--ink)', letterSpacing: '0.04em', margin: 0 }}>
+            TimeTrack
+          </h1>
         </div>
 
-        {/* Card */}
-        <div className="animate-rotate-in" style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
-          <div style={{ height: '4px', background: 'linear-gradient(90deg, var(--sap-blue), #00A3FF)' }} />
-          <div style={{ padding: '28px' }}>
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '16px' }}>
-                <label className="sap-label">Username</label>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)}
-                  required autoFocus className="sap-input" placeholder="Enter username"
-                />
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label className="sap-label">Password</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                  required className="sap-input" placeholder="Enter password"
-                />
-              </div>
-
-              {error && (
-                <div className="animate-slide-down" style={{ background: 'var(--absent-bg)', border: '1px solid #f5b3b3', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ color: 'var(--absent)' }}>⚠</span>
-                  <p style={{ fontSize: '13px', color: 'var(--absent)', margin: 0 }}>{error}</p>
-                </div>
-              )}
-
-              <button type="submit" disabled={loading} className="sap-btn-primary" style={{ width: '100%', padding: '13px', fontSize: '14px' }}>
-                {loading ? (
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                    <span style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
-                    Signing in...
-                  </span>
-                ) : 'Sign In →'}
-              </button>
-            </form>
+        <div style={{ border: '1px solid var(--line)', background: 'var(--bg)', borderRadius: '2px' }}>
+          <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '14px 20px' }}>
+            <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>
+              Sign In
+            </span>
           </div>
+
+          <form onSubmit={handleSubmit} style={{ padding: '24px 20px' }}>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                required
+                autoFocus
+                style={inputStyle}
+                onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                onBlur={e => e.target.style.borderColor = 'var(--line)'}
+              />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                style={inputStyle}
+                onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                onBlur={e => e.target.style.borderColor = 'var(--line)'}
+              />
+            </div>
+
+            {error && (
+              <div style={{ borderLeft: '2px solid var(--absent)', paddingLeft: '10px', marginBottom: '16px' }}>
+                <p style={{ fontSize: '13px', color: 'var(--absent)', margin: 0 }}>{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '11px',
+                border: '1px solid var(--ink)',
+                background: loading ? 'var(--line)' : 'var(--ink)',
+                color: loading ? 'var(--ink-3)' : 'var(--bg)',
+                fontSize: '13px',
+                fontWeight: '600',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                borderRadius: '2px',
+                fontFamily: 'var(--mono)',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                transition: 'all 0.15s',
+              }}
+            >
+              {loading ? 'Signing in...' : 'Sign In →'}
+            </button>
+          </form>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '20px' }}>
-          <a href="/" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'underline' }}>
+        <p style={{ textAlign: 'center', fontSize: '11px', color: 'var(--ink-3)', marginTop: '20px', fontFamily: 'var(--mono)' }}>
+          <a href="/" style={{ color: 'var(--ink-2)', textDecoration: 'underline' }}>
             ← Employee Time-In
           </a>
         </p>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
