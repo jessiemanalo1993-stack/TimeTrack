@@ -43,9 +43,9 @@ export default function AdminLogin() {
     <div style={{ minHeight: '100vh', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div style={{ width: '100%', maxWidth: '360px' }}>
 
-        <div style={{ marginBottom: '36px' }}>
+        <div style={{ marginBottom: '36px', textAlign: 'center' }}>
           <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '6px' }}>
-            Admin Portal
+            Manager Panel
           </p>
           <h1 style={{ fontFamily: 'var(--mono)', fontSize: '22px', fontWeight: '500', color: 'var(--ink)', letterSpacing: '0.04em', margin: 0 }}>
             TimeTrack
