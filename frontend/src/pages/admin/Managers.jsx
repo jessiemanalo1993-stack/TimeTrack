@@ -12,6 +12,7 @@ export default function Managers() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [deletePassword, setDeletePassword] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
@@ -33,7 +34,11 @@ export default function Managers() {
 
   async function handleDelete(id) {
     setDeleting(true); setDeleteError('');
-    try { await api.deleteManager(id); setConfirmDelete(null); load(); }
+    try {
+      await api.verifyAdminPassword(deletePassword);
+      await api.deleteManager(id);
+      setConfirmDelete(null); setDeletePassword(''); load();
+    }
     catch (err) { setDeleteError(err.message); }
     finally { setDeleting(false); }
   }
@@ -137,20 +142,25 @@ export default function Managers() {
             <div style={{ height: '3px', background: 'linear-gradient(90deg, #f87171, #ef4444)' }} />
             <div className="panel-header" style={{ borderTop: 'none' }}>
               <span className="panel-title" style={{ color: 'var(--absent)' }}>Delete Manager</span>
-              <button onClick={() => setConfirmDelete(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '22px', color: 'var(--ink-3)', lineHeight: 1 }}>×</button>
+              <button onClick={() => { setConfirmDelete(null); setDeletePassword(''); setDeleteError(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '22px', color: 'var(--ink-3)', lineHeight: 1 }}>×</button>
             </div>
             <div style={{ padding: '22px' }}>
               <p style={{ fontSize: '15px', color: 'var(--ink)', marginBottom: '4px', fontWeight: '600' }}>
                 Delete <span style={{ color: 'var(--absent)' }}>{confirmDelete.name}</span>?
               </p>
-              <p style={{ fontSize: '12px', color: 'var(--ink-3)', marginBottom: '22px', lineHeight: 1.6 }}>
+              <p style={{ fontSize: '12px', color: 'var(--ink-3)', marginBottom: '18px', lineHeight: 1.6 }}>
                 This manager will lose access to the console immediately.
               </p>
+              <div style={{ marginBottom: '16px' }}>
+                <label className="field-label">Your Password</label>
+                <input type="password" value={deletePassword} onChange={e => { setDeletePassword(e.target.value); setDeleteError(''); }}
+                  placeholder="Confirm with your password" autoFocus className="dark-input" />
+              </div>
               {deleteError && <div className="msg-error" style={{ marginBottom: '14px' }}><p>{deleteError}</p></div>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <button onClick={() => setConfirmDelete(null)} className="btn-ghost">Cancel</button>
-                <button onClick={() => handleDelete(confirmDelete.id)} disabled={deleting} className="btn-danger">
-                  {deleting ? 'Deleting…' : 'Delete'}
+                <button onClick={() => { setConfirmDelete(null); setDeletePassword(''); setDeleteError(''); }} className="btn-ghost">Cancel</button>
+                <button onClick={() => handleDelete(confirmDelete.id)} disabled={deleting || !deletePassword} className="btn-danger">
+                  {deleting ? 'Verifying…' : 'Delete'}
                 </button>
               </div>
             </div>
