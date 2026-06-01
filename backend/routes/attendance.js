@@ -6,10 +6,16 @@ const { todayLocal, timeLocal, dayNameLocal, toMinutes, formatTime12 } = require
 
 // POST /api/attendance/timein — public (no auth)
 router.post('/timein', async (req, res) => {
-  const { email, work_location } = req.body;
+  const { email, work_location, leave_type } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
-  if (!work_location || !['Onsite', 'Work From Home'].includes(work_location)) {
-    return res.status(400).json({ error: 'work_location must be "Onsite" or "Work From Home"' });
+
+  const isOnLeave = work_location === 'On Leave';
+
+  if (!work_location || !['Onsite', 'Work From Home', 'On Leave'].includes(work_location)) {
+    return res.status(400).json({ error: 'work_location must be "Onsite", "Work From Home", or "On Leave"' });
+  }
+  if (isOnLeave && !leave_type) {
+    return res.status(400).json({ error: 'leave_type is required when On Leave' });
   }
 
   const { data: employee, error: empError } = await supabase
@@ -45,7 +51,7 @@ router.post('/timein', async (req, res) => {
   const timeNow = timeLocal();
   const nowMins = toMinutes(timeNow);
   const shiftMins = toMinutes(employee.shift_start);
-  const status = nowMins <= shiftMins ? 'Present' : 'Late';
+  const status = isOnLeave ? 'On Leave' : (nowMins <= shiftMins ? 'Present' : 'Late');
 
   const { data: record, error: insertError } = await supabase
     .from('attendance')
@@ -54,7 +60,8 @@ router.post('/timein', async (req, res) => {
       date: today,
       time_in: timeNow,
       status,
-      work_location
+      work_location: isOnLeave ? null : work_location,
+      leave_type: isOnLeave ? leave_type : null,
     })
     .select()
     .single();
@@ -71,7 +78,8 @@ router.post('/timein', async (req, res) => {
     scheduled_start: employee.shift_start,
     scheduled_start_formatted: formatTime12(employee.shift_start),
     status,
-    work_location
+    work_location: isOnLeave ? null : work_location,
+    leave_type: isOnLeave ? leave_type : null,
   });
 });
 
@@ -162,6 +170,7 @@ router.get('/export', authMiddleware, async (req, res) => {
     { header: 'Status', key: 'status', width: 12 },
     { header: 'Login Time', key: 'time_in', width: 14 },
     { header: 'Location', key: 'work_location', width: 18 },
+    { header: 'Leave Type', key: 'leave_type', width: 18 },
   ];
 
   // Style header row
@@ -174,9 +183,10 @@ router.get('/export', authMiddleware, async (req, res) => {
   headerRow.height = 22;
 
   const statusColors = {
-    Present: { bg: 'FFD1FAE5', font: 'FF065F46' },
-    Late:    { bg: 'FFFEF3C7', font: 'FF92400E' },
-    Absent:  { bg: 'FFFEE2E2', font: 'FF991B1B' },
+    Present:  { bg: 'FFD1FAE5', font: 'FF065F46' },
+    Late:     { bg: 'FFFEF3C7', font: 'FF92400E' },
+    Absent:   { bg: 'FFFEE2E2', font: 'FF991B1B' },
+    'On Leave': { bg: 'FFE0E7FF', font: 'FF3730A3' },
   };
 
   data.forEach(record => {
@@ -188,6 +198,7 @@ router.get('/export', authMiddleware, async (req, res) => {
       status: record.status,
       time_in: formatTime12(record.time_in),
       work_location: record.work_location || '—',
+      leave_type: record.leave_type || '—',
     });
 
     const colors = statusColors[record.status];

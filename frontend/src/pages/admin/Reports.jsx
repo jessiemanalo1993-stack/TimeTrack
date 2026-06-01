@@ -137,7 +137,7 @@ export default function Reports() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr>{['Employee', 'Dept', 'Date', 'Day', 'Schedule', 'Time In', 'Location', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
+                  <tr>{['Employee', 'Date', 'Day', 'Schedule', 'Time In', 'Location', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {preview.map(r => {
@@ -153,7 +153,6 @@ export default function Reports() {
                           <p style={{ margin: '0 0 1px', fontWeight: '500' }}>{r.employees?.name}</p>
                           <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>{r.employees?.email}</p>
                         </td>
-                        <td style={{ ...td, color: 'var(--ink-2)' }}>{r.employees?.department || '—'}</td>
                         <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px' }}>{r.date}</td>
                         <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{dayName}</td>
                         <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{formatTime(r.employees?.shift_start)}</td>

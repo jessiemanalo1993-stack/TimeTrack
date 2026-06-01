@@ -18,6 +18,7 @@ const inputStyle = {
 export default function EmployeeTimein() {
   const [email, setEmail] = useState('');
   const [workLocation, setWorkLocation] = useState('');
+  const [leaveType, setLeaveType] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -28,10 +29,11 @@ export default function EmployeeTimein() {
     setResult(null);
     setLoading(true);
     try {
-      const data = await api.timein(email.trim(), workLocation);
+      const data = await api.timein(email.trim(), workLocation, leaveType || undefined);
       setResult(data);
       setEmail('');
       setWorkLocation('');
+      setLeaveType('');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -82,7 +84,8 @@ export default function EmployeeTimein() {
                     { label: 'Login Time', value: result.time_in_formatted, mono: true },
                     { label: 'Scheduled Start', value: result.scheduled_start_formatted, mono: true },
                     { label: 'Date', value: result.date, mono: true },
-                    { label: 'Location', value: result.work_location, mono: false },
+                    ...(result.work_location ? [{ label: 'Location', value: result.work_location, mono: false }] : []),
+                    ...(result.leave_type ? [{ label: 'Leave Type', value: result.leave_type, mono: false }] : []),
                   ].map(({ label, value, mono }) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--line-2)' }}>
                       <span style={{ fontSize: '12px', color: 'var(--ink-3)' }}>{label}</span>
@@ -143,20 +146,20 @@ export default function EmployeeTimein() {
                   <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '8px' }}>
                     Work Location
                   </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    {['Onsite', 'Work From Home'].map(loc => {
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                    {['Onsite', 'Work From Home', 'On Leave'].map(loc => {
                       const selected = workLocation === loc;
                       return (
                         <button
                           key={loc}
                           type="button"
-                          onClick={() => setWorkLocation(loc)}
+                          onClick={() => { setWorkLocation(loc); setLeaveType(''); }}
                           style={{
                             padding: '10px 8px',
                             border: selected ? '1px solid var(--ink)' : '1px solid var(--line)',
                             background: selected ? 'var(--ink)' : 'var(--bg)',
                             color: selected ? 'var(--bg)' : 'var(--ink-2)',
-                            fontSize: '12px',
+                            fontSize: '11px',
                             cursor: 'pointer',
                             borderRadius: '2px',
                             fontFamily: 'var(--font)',
@@ -172,6 +175,41 @@ export default function EmployeeTimein() {
                   </div>
                 </div>
 
+                {workLocation === 'On Leave' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                      Leave Type
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      {['Sick Leave', 'Vacation Leave', 'Emergency Leave', 'Other'].map(type => {
+                        const selected = leaveType === type;
+                        return (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => setLeaveType(type)}
+                            style={{
+                              padding: '10px 8px',
+                              border: selected ? '1px solid var(--ink)' : '1px solid var(--line)',
+                              background: selected ? 'var(--ink)' : 'var(--bg)',
+                              color: selected ? 'var(--bg)' : 'var(--ink-2)',
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                              borderRadius: '2px',
+                              fontFamily: 'var(--font)',
+                              fontWeight: selected ? '600' : '400',
+                              transition: 'all 0.15s',
+                              textAlign: 'center',
+                            }}
+                          >
+                            {type}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {error && (
                   <div style={{ borderLeft: '2px solid var(--absent)', paddingLeft: '10px', marginBottom: '16px' }}>
                     <p style={{ fontSize: '13px', color: 'var(--absent)', margin: 0 }}>{error}</p>
@@ -180,16 +218,16 @@ export default function EmployeeTimein() {
 
                 <button
                   type="submit"
-                  disabled={loading || !email || !workLocation}
+                  disabled={loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType)}
                   style={{
                     width: '100%',
                     padding: '11px',
                     border: '1px solid var(--ink)',
-                    background: (loading || !email || !workLocation) ? 'var(--line)' : 'var(--ink)',
-                    color: (loading || !email || !workLocation) ? 'var(--ink-3)' : 'var(--bg)',
+                    background: (loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType)) ? 'var(--line)' : 'var(--ink)',
+                    color: (loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType)) ? 'var(--ink-3)' : 'var(--bg)',
                     fontSize: '13px',
                     fontWeight: '600',
-                    cursor: (loading || !email || !workLocation) ? 'not-allowed' : 'pointer',
+                    cursor: (loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType)) ? 'not-allowed' : 'pointer',
                     borderRadius: '2px',
                     fontFamily: 'var(--mono)',
                     letterSpacing: '0.06em',

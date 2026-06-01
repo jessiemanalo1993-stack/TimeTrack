@@ -127,7 +127,6 @@ export default function Attendance() {
                   >
                     <td style={td}>
                       <p style={{ margin: '0 0 1px', fontWeight: '500' }}>{r.employees?.name}</p>
-                      <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>{r.employees?.department || ''}</p>
                     </td>
                     <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{formatTime(r.employees?.shift_start)}</td>
                     <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>{formatTime(r.time_in)}</td>

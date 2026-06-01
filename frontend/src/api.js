@@ -46,7 +46,7 @@ export const api = {
   deleteEmployee: (id) => request('DELETE', `/api/employees/${id}`, null, true),
 
   // Attendance
-  timein: (email, work_location) => request('POST', '/api/attendance/timein', { email, work_location }),
+  timein: (email, work_location, leave_type) => request('POST', '/api/attendance/timein', { email, work_location, leave_type }),
   getAttendance: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request('GET', `/api/attendance${qs ? '?' + qs : ''}`, null, true);

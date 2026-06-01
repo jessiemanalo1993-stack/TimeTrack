@@ -3,7 +3,7 @@ import { api } from '../../api';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const EMPTY_FORM = {
-  name: '', email: '', department: '',
+  name: '', email: '',
   shift_start: '09:00', work_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
 };
 
@@ -40,7 +40,7 @@ export default function Employees() {
 
   function openCreate() { setForm(EMPTY_FORM); setEditId(null); setError(''); setModal('create'); }
   function openEdit(emp) {
-    setForm({ name: emp.name, email: emp.email, department: emp.department || '', shift_start: emp.shift_start?.slice(0, 5) || '09:00', work_days: emp.work_days || [] });
+    setForm({ name: emp.name, email: emp.email, shift_start: emp.shift_start?.slice(0, 5) || '09:00', work_days: emp.work_days || [] });
     setEditId(emp.id); setError(''); setModal('edit');
   }
 
@@ -99,7 +99,7 @@ export default function Employees() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr>{['Name', 'Email', 'Department', 'Shift Start', 'Work Days', 'Actions'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
+                <tr>{['Name', 'Email', 'Shift Start', 'Work Days', 'Actions'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {employees.map(emp => (
@@ -110,7 +110,6 @@ export default function Employees() {
                   >
                     <td style={{ ...td, fontWeight: '500' }}>{emp.name}</td>
                     <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{emp.email}</td>
-                    <td style={{ ...td, color: 'var(--ink-2)' }}>{emp.department || '—'}</td>
                     <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>{formatTime(emp.shift_start)}</td>
                     <td style={td}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
@@ -149,7 +148,6 @@ export default function Employees() {
               {[
                 { label: 'Full Name *', key: 'name', type: 'text', required: true, placeholder: '' },
                 { label: 'Work Email *', key: 'email', type: 'email', required: true, placeholder: '' },
-                { label: 'Department', key: 'department', type: 'text', required: false, placeholder: 'e.g. Engineering' },
               ].map(({ label, key, type, required, placeholder }) => (
                 <div key={key} style={{ marginBottom: '14px' }}>
                   <label style={labelStyle}>{label}</label>
