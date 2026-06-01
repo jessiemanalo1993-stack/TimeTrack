@@ -78,7 +78,7 @@ export default function Reports() {
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
       <div style={{ marginBottom: '28px' }}>
         <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 4px' }}>Export</p>
         <h1 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>Reports</h1>
@@ -90,7 +90,8 @@ export default function Reports() {
         <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '12px 16px' }}>
           <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>Filters</span>
         </div>
-        <form onSubmit={handleSearch} style={{ padding: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+        <form onSubmit={handleSearch} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
           {[
             { label: 'From', value: dateFrom, set: setDateFrom },
             { label: 'To', value: dateTo, set: setDateTo },
@@ -111,6 +112,8 @@ export default function Reports() {
               {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
           </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           <button type="submit"
             style={{ padding: '9px 16px', border: '1px solid var(--ink)', background: 'var(--ink)', color: 'var(--bg)', fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '2px' }}>
             Preview
@@ -121,12 +124,15 @@ export default function Reports() {
               ↓ {downloading ? 'Downloading...' : 'Download Excel'}
             </button>
           )}
+          </div>
         </form>
       </div>
 
       {/* Summary row */}
       {searched && (
-        <div style={{ display: 'flex', gap: '1px', background: 'var(--line)', border: '1px solid var(--line)', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1px', background: 'var(--line)', border: '1px solid var(--line)', marginBottom: '16px' }}
+          className="sm:grid-cols-5"
+        >
           {[
             { label: 'Total', value: preview.length, color: 'var(--ink)' },
             { label: 'Present', value: counts.Present, color: 'var(--present)' },

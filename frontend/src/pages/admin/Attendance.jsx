@@ -57,7 +57,7 @@ export default function Attendance() {
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
       <div style={{ marginBottom: '28px' }}>
         <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 4px' }}>Records</p>
         <h1 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--ink)', margin: 0 }}>Attendance</h1>

@@ -38,7 +38,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
       <div style={{ marginBottom: '28px' }}>
         <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 4px' }}>
           Overview
@@ -48,7 +48,9 @@ export default function Dashboard() {
       </div>
 
       {/* Stat row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: 'var(--line)', border: '1px solid var(--line)', marginBottom: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1px', background: 'var(--line)', border: '1px solid var(--line)', marginBottom: '24px' }}
+        className="sm:grid-cols-4"
+      >
         {[
           { label: 'Total', value: employees.length, color: 'var(--ink)' },
           { label: 'Present', value: counts.Present, color: 'var(--present)' },
