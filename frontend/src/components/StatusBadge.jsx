@@ -1,11 +1,11 @@
 const config = {
-  Present:    { color: 'var(--present)',  bg: 'var(--present-dim)',  border: 'rgba(0,229,160,0.3)' },
-  Late:       { color: 'var(--late)',     bg: 'var(--late-dim)',     border: 'rgba(245,158,11,0.3)' },
-  Absent:     { color: 'var(--absent)',   bg: 'var(--absent-dim)',   border: 'rgba(244,63,94,0.3)' },
-  'On Leave': { color: 'var(--on-leave)', bg: 'var(--on-leave-dim)', border: 'rgba(129,140,248,0.3)' },
-  Approved:   { color: 'var(--present)',  bg: 'var(--present-dim)',  border: 'rgba(0,229,160,0.3)' },
-  Rejected:   { color: 'var(--absent)',   bg: 'var(--absent-dim)',   border: 'rgba(244,63,94,0.3)' },
-  Pending:    { color: 'var(--ink-2)',    bg: 'rgba(139,144,160,0.1)', border: 'rgba(139,144,160,0.2)' },
+  Present:    { color: '#4ade80', bg: 'rgba(74,222,128,0.12)',   border: 'rgba(74,222,128,0.3)' },
+  Late:       { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',   border: 'rgba(251,191,36,0.3)' },
+  Absent:     { color: '#f87171', bg: 'rgba(248,113,113,0.12)',  border: 'rgba(248,113,113,0.3)' },
+  'On Leave': { color: '#a78bfa', bg: 'rgba(167,139,250,0.12)',  border: 'rgba(167,139,250,0.3)' },
+  Approved:   { color: '#4ade80', bg: 'rgba(74,222,128,0.12)',   border: 'rgba(74,222,128,0.3)' },
+  Rejected:   { color: '#f87171', bg: 'rgba(248,113,113,0.12)',  border: 'rgba(248,113,113,0.3)' },
+  Pending:    { color: '#fbbf24', bg: 'rgba(251,191,36,0.10)',   border: 'rgba(251,191,36,0.25)' },
 };
 
 export default function StatusBadge({ status }) {
@@ -14,18 +14,18 @@ export default function StatusBadge({ status }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: '5px',
-      padding: '3px 10px',
+      padding: '4px 10px',
       background: c.bg,
       border: `1px solid ${c.border}`,
       borderRadius: '20px',
       fontFamily: 'var(--mono)',
       fontSize: '10px',
       fontWeight: '500',
-      letterSpacing: '0.08em',
+      letterSpacing: '0.07em',
       textTransform: 'uppercase',
       color: c.color,
     }}>
-      <span style={{ width: 5, height: 5, borderRadius: '50%', background: c.color, flexShrink: 0 }} />
+      <span style={{ width: 5, height: 5, borderRadius: '50%', background: c.color, flexShrink: 0, boxShadow: `0 0 6px ${c.color}` }} />
       {status}
     </span>
   );

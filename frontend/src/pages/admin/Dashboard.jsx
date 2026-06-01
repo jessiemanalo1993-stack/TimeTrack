@@ -23,22 +23,21 @@ export default function Dashboard() {
       api.getAttendance({ date_from: today, date_to: today }),
       api.getEmployees(),
     ]).then(([att, emps]) => {
-      setRecords(att);
-      setEmployees(emps);
+      setRecords(att); setEmployees(emps);
     }).finally(() => setLoading(false));
   }, []);
 
   const counts = {
     Present: records.filter(r => r.status === 'Present').length,
-    Late: records.filter(r => r.status === 'Late').length,
-    Absent: records.filter(r => r.status === 'Absent').length,
+    Late:    records.filter(r => r.status === 'Late').length,
+    Absent:  records.filter(r => r.status === 'Absent').length,
   };
 
   const stats = [
-    { label: 'Total', value: employees.length, color: 'var(--ink)', accentColor: 'var(--accent)' },
-    { label: 'Present', value: counts.Present, color: 'var(--present)', accentColor: 'var(--present)' },
-    { label: 'Late', value: counts.Late, color: 'var(--late)', accentColor: 'var(--late)' },
-    { label: 'Absent', value: counts.Absent, color: 'var(--absent)', accentColor: 'var(--absent)' },
+    { label: 'Total',   value: employees.length, color: 'var(--ink)',    accent: '#a855f7', glow: 'rgba(168,85,247,0.4)' },
+    { label: 'Present', value: counts.Present,   color: 'var(--present)', accent: '#4ade80', glow: 'rgba(74,222,128,0.4)' },
+    { label: 'Late',    value: counts.Late,       color: 'var(--late)',    accent: '#fbbf24', glow: 'rgba(251,191,36,0.4)' },
+    { label: 'Absent',  value: counts.Absent,     color: 'var(--absent)',  accent: '#f87171', glow: 'rgba(248,113,113,0.4)' },
   ];
 
   return (
@@ -46,23 +45,20 @@ export default function Dashboard() {
 
       {/* Page header */}
       <div style={{ marginBottom: '32px' }}>
-        <p style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 6px' }}>
-          Overview
-        </p>
-        <h1 style={{ fontSize: '22px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 4px', letterSpacing: '-0.01em' }}>Dashboard</h1>
-        <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)', letterSpacing: '0.04em' }}>{todayLabel}</p>
+        <p style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 6px' }}>Overview</p>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--ink)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>Dashboard</h1>
+        <p style={{ fontSize: '13px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>{todayLabel}</p>
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}
-        className="stat-grid">
-        {stats.map(({ label, value, color, accentColor }) => (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '28px' }} className="stat-grid">
+        {stats.map(({ label, value, color, accent, glow }) => (
           <div key={label} className="stat-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
               <p style={{ fontSize: '10px', fontFamily: 'var(--mono)', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: 0 }}>{label}</p>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, display: 'block', marginTop: '2px', boxShadow: `0 0 8px ${accentColor}` }} />
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: accent, display: 'block', boxShadow: `0 0 10px ${glow}` }} />
             </div>
-            <p style={{ fontSize: '40px', fontWeight: '600', color, margin: 0, fontFamily: 'var(--mono)', lineHeight: 1, letterSpacing: '-0.02em' }}>
+            <p style={{ fontSize: '44px', fontWeight: '700', color, margin: 0, fontFamily: 'var(--mono)', lineHeight: 1, letterSpacing: '-0.03em' }}>
               {loading ? '—' : value}
             </p>
           </div>
@@ -73,38 +69,31 @@ export default function Dashboard() {
       <div className="panel">
         <div className="panel-header accent-bar">
           <span className="panel-title">Today's Attendance</span>
+          <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', color: 'var(--ink-3)' }}>{today}</span>
         </div>
 
         {loading ? (
-          <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0, letterSpacing: '0.06em' }}>
-            Loading records...
-          </p>
+          <p style={{ padding: '52px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>Loading records…</p>
         ) : records.length === 0 ? (
-          <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>
-            No records for today.
-          </p>
+          <p style={{ padding: '52px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>No records for today.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }} className="table-scroll">
+          <div className="table-scroll">
             <table className="dark-table">
               <thead>
-                <tr>
-                  {['Employee', 'Schedule', 'Time In', 'Time Out', 'Location', 'Status'].map(h => (
-                    <th key={h}>{h}</th>
-                  ))}
-                </tr>
+                <tr>{['Employee', 'Schedule', 'Time In', 'Time Out', 'Location', 'Status'].map(h => <th key={h}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {records.map(r => (
                   <tr key={r.id}>
                     <td>
-                      <p style={{ margin: '0 0 2px', fontWeight: '500', color: 'var(--ink)' }}>{r.employees?.name}</p>
-                      <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', letterSpacing: '0.03em' }}>{r.employees?.email}</p>
+                      <p style={{ margin: '0 0 2px', fontWeight: '600', color: 'var(--ink)' }}>{r.employees?.name}</p>
+                      <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>{r.employees?.email}</p>
                     </td>
                     <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>
                       {formatTime(r.employees?.shift_start)}
                       {r.employees?.shift_end && <span style={{ color: 'var(--ink-3)' }}> – {formatTime(r.employees.shift_end)}</span>}
                     </td>
-                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500', color: 'var(--ink)' }}>
+                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>
                       {r.status === 'On Leave' ? <span style={{ color: 'var(--ink-3)' }}>N/A</span> : formatTime(r.time_in)}
                     </td>
                     <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>

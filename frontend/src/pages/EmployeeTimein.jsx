@@ -6,6 +6,9 @@ import StatusBadge from '../components/StatusBadge';
 const todayManila = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
 function getEmployee() { try { return JSON.parse(localStorage.getItem('tt_employee')); } catch { return null; } }
 
+const AVATAR_COLORS = ['#e879f9', '#a855f7', '#6366f1', '#22d3ee', '#4ade80'];
+function avatarColor(name) { return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length]; }
+
 export default function EmployeeTimein() {
   const navigate = useNavigate();
   const [employee, setEmployee] = useState(null);
@@ -92,60 +95,72 @@ export default function EmployeeTimein() {
   if (!employee) return null;
 
   const tabs = [
-    { key: 'timein', label: 'Time In' },
-    { key: 'timeout', label: 'Time Out' },
-    { key: 'leave', label: 'File Leave' },
+    { key: 'timein',      label: 'Time In' },
+    { key: 'timeout',     label: 'Time Out' },
+    { key: 'leave',       label: 'Leave' },
     { key: 'setpassword', label: 'Password' },
   ];
 
-  const statusHeader = result ? 'Time-In Recorded' : timeoutResult ? 'Time-Out Recorded' : leaveResult ? 'Leave Submitted' : spResult ? 'Password Updated' : 'Employee Portal';
+  const color = avatarColor(employee.name);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative' }}>
-      <div className="bg-glow" />
+    <div style={{ minHeight: '100vh', background: 'var(--base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative', overflow: 'hidden' }}>
+      {/* Orbs */}
+      <div className="orb orb-violet" style={{ width: 350, height: 350, top: '-10%', right: '-10%', opacity: 0.35 }} />
+      <div className="orb orb-pink"   style={{ width: 250, height: 250, bottom: '-10%', left: '-5%', opacity: 0.25 }} />
+
       <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1 }}>
 
-        <div className="animate-fade-down" style={{ marginBottom: '32px', textAlign: 'center' }}>
-          <h1 className="wordmark">Time<span style={{ color: 'var(--accent)' }}>Track</span></h1>
+        {/* Wordmark */}
+        <div className="animate-fade-down" style={{ marginBottom: '24px', textAlign: 'center' }}>
+          <h1 className="wordmark" style={{ fontSize: '22px' }}>
+            Time<span className="grad-text">Track</span>
+          </h1>
         </div>
 
         <div className="panel animate-rotate-in">
-          {/* Header */}
-          <div className="panel-header accent-bar">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: 30, height: 30, borderRadius: '8px', background: 'var(--accent-dim)', border: '1px solid rgba(0,229,160,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', fontWeight: '600', color: 'var(--accent)' }}>
+          <div style={{ height: '3px', background: 'var(--hero-gradient)' }} />
+
+          {/* User hero header */}
+          <div style={{
+            padding: '20px 22px 18px',
+            background: 'linear-gradient(135deg, rgba(168,85,247,0.08) 0%, rgba(99,102,241,0.05) 100%)',
+            borderBottom: '1px solid var(--line)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Avatar */}
+              <div style={{
+                width: 42, height: 42, borderRadius: '12px', flexShrink: 0,
+                background: `linear-gradient(135deg, ${color}33, ${color}22)`,
+                border: `1px solid ${color}44`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: `0 0 16px ${color}30`,
+              }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '16px', fontWeight: '600', color }}>
                   {employee.name.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div>
-                <p style={{ fontSize: '13px', fontWeight: '500', color: 'var(--ink)', margin: 0, lineHeight: 1.2 }}>{employee.name}</p>
-                <p style={{ fontSize: '10px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: 0 }}>{employee.email}</p>
+                <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--ink)', margin: 0, lineHeight: 1.2 }}>{employee.name}</p>
+                <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '2px 0 0' }}>{employee.email}</p>
               </div>
             </div>
             <button onClick={signOut} style={{
               fontSize: '10px', fontFamily: 'var(--mono)', color: 'var(--ink-3)',
-              background: 'none', border: '1px solid var(--line)', padding: '4px 10px',
-              cursor: 'pointer', borderRadius: '6px', letterSpacing: '0.06em',
-              textTransform: 'uppercase', transition: 'all 0.15s',
+              background: 'none', border: '1px solid var(--line)', padding: '5px 12px',
+              cursor: 'pointer', borderRadius: '8px', letterSpacing: '0.06em',
+              textTransform: 'uppercase', transition: 'all 0.2s', flexShrink: 0,
             }}
-            onMouseEnter={e => { e.target.style.color = 'var(--absent)'; e.target.style.borderColor = 'rgba(244,63,94,0.3)'; }}
-            onMouseLeave={e => { e.target.style.color = 'var(--ink-3)'; e.target.style.borderColor = 'var(--line)'; }}
-            >
+            onMouseEnter={e => { e.target.style.color = 'var(--absent)'; e.target.style.borderColor = 'rgba(248,113,113,0.35)'; e.target.style.background = 'rgba(248,113,113,0.06)'; }}
+            onMouseLeave={e => { e.target.style.color = 'var(--ink-3)'; e.target.style.borderColor = 'var(--line)'; e.target.style.background = 'none'; }}>
               Sign Out
             </button>
           </div>
 
-          {/* Status bar */}
-          <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--line)', background: 'var(--base-2)' }}>
-            <span style={{ fontSize: '10px', fontFamily: 'var(--mono)', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>
-              {statusHeader}
-            </span>
-          </div>
-
           {/* Tabs */}
           {!hasAnyResult && (
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)', background: 'rgba(0,0,0,0.1)' }}>
               <div className="tab-group">
                 {tabs.map(({ key, label }) => (
                   <button key={key} type="button" onClick={() => switchMode(key)}
@@ -157,7 +172,15 @@ export default function EmployeeTimein() {
             </div>
           )}
 
-          <div style={{ padding: '24px 20px' }}>
+          {hasAnyResult && (
+            <div style={{ padding: '10px 22px', borderBottom: '1px solid var(--line)', background: 'rgba(0,0,0,0.1)' }}>
+              <span style={{ fontSize: '10px', fontFamily: 'var(--mono)', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>
+                {result ? 'Time-In Recorded' : timeoutResult ? 'Time-Out Recorded' : leaveResult ? 'Leave Submitted' : 'Password Updated'}
+              </span>
+            </div>
+          )}
+
+          <div style={{ padding: '22px' }}>
 
             {/* ── TIME IN ── */}
             {mode === 'timein' && !result && (
@@ -192,12 +215,12 @@ export default function EmployeeTimein() {
             {/* TIME IN result */}
             {mode === 'timein' && result && (
               <div className="animate-fade-up">
-                <div style={{ borderLeft: `2px solid ${result.status === 'Present' ? 'var(--present)' : 'var(--late)'}`, paddingLeft: '14px', marginBottom: '20px' }}>
-                  <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>{result.name}</p>
+                <div style={{ marginBottom: '18px', padding: '16px', borderRadius: '14px', background: 'linear-gradient(135deg, rgba(168,85,247,0.08) 0%, rgba(99,102,241,0.06) 100%)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                  <p style={{ fontSize: '17px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>{result.name}</p>
                   <p style={{ fontSize: '11px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>{result.email}</p>
                 </div>
                 <div style={{ marginBottom: '16px' }}><StatusBadge status={result.status} /></div>
-                <div style={{ borderTop: '1px solid var(--line-2)' }}>
+                <div>
                   {[
                     { label: 'Login Time', value: result.time_in_formatted },
                     { label: 'Scheduled Start', value: result.scheduled_start_formatted },
@@ -206,12 +229,16 @@ export default function EmployeeTimein() {
                     ...(result.leave_type ? [{ label: 'Leave Type', value: result.leave_type }] : []),
                   ].map(({ label, value }) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--line-2)' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--ink-3)' }}>{label}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--ink-3)' }}>{label}</span>
                       <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--ink)', fontFamily: 'var(--mono)' }}>{value}</span>
                     </div>
                   ))}
                 </div>
-                {result.status === 'Late' && <p style={{ fontSize: '11px', color: 'var(--late)', marginTop: '14px', fontFamily: 'var(--mono)' }}>↑ Arrived after scheduled start time</p>}
+                {result.status === 'Late' && (
+                  <p style={{ fontSize: '11px', color: 'var(--late)', marginTop: '14px', fontFamily: 'var(--mono)' }}>
+                    ↑ Arrived after scheduled start time
+                  </p>
+                )}
                 <button onClick={() => setResult(null)} className="btn-ghost" style={{ marginTop: '18px' }}>Done</button>
               </div>
             )}
@@ -222,8 +249,7 @@ export default function EmployeeTimein() {
                 <div style={{ marginBottom: '16px' }}>
                   <label className="field-label">Leave Date</label>
                   <input className="dark-input" type="date" value={leaveDate}
-                    onChange={e => setLeaveDate(e.target.value)} min={todayManila()} required
-                    style={{ padding: '10px 14px' }} />
+                    onChange={e => setLeaveDate(e.target.value)} min={todayManila()} required />
                 </div>
                 <div style={{ marginBottom: '16px' }}>
                   <label className="field-label">Leave Type</label>
@@ -235,7 +261,7 @@ export default function EmployeeTimein() {
                   </div>
                 </div>
                 <div style={{ marginBottom: '20px' }}>
-                  <label className="field-label">Reason <span style={{ color: 'var(--ink-4)' }}>(optional)</span></label>
+                  <label className="field-label">Reason <span style={{ color: 'var(--ink-4)', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
                   <textarea className="dark-input" value={leaveReason} onChange={e => setLeaveReason(e.target.value)}
                     maxLength={300} rows={3} placeholder="Brief description…"
                     style={{ resize: 'vertical', minHeight: '72px' }} />
@@ -250,19 +276,19 @@ export default function EmployeeTimein() {
             {/* LEAVE result */}
             {mode === 'leave' && leaveResult && (
               <div className="animate-fade-up">
-                <div style={{ borderLeft: '2px solid var(--on-leave)', paddingLeft: '14px', marginBottom: '20px' }}>
-                  <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>{leaveResult.name}</p>
+                <div style={{ marginBottom: '18px', padding: '16px', borderRadius: '14px', background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}>
+                  <p style={{ fontSize: '17px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>{leaveResult.name}</p>
                   <p style={{ fontSize: '11px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>{leaveResult.email}</p>
                 </div>
                 <div style={{ marginBottom: '16px' }}><StatusBadge status="Pending" /></div>
-                <div style={{ borderTop: '1px solid var(--line-2)' }}>
+                <div>
                   {[
                     { label: 'Leave Date', value: leaveResult.date },
                     { label: 'Leave Type', value: leaveResult.leave_type },
                     { label: 'Status', value: 'Pending Manager Approval' },
                   ].map(({ label, value }) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--line-2)' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--ink-3)' }}>{label}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--ink-3)' }}>{label}</span>
                       <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--ink)', fontFamily: 'var(--mono)' }}>{value}</span>
                     </div>
                   ))}
@@ -274,9 +300,9 @@ export default function EmployeeTimein() {
             {/* ── TIME OUT ── */}
             {mode === 'timeout' && !timeoutResult && (
               <form onSubmit={handleTimeout} className="animate-slide-down">
-                <div style={{ padding: '16px', background: 'var(--base-2)', borderRadius: '8px', border: '1px solid var(--line)', marginBottom: '20px' }}>
+                <div style={{ padding: '18px 20px', background: 'linear-gradient(135deg, rgba(168,85,247,0.08) 0%, rgba(99,102,241,0.06) 100%)', borderRadius: '14px', border: '1px solid rgba(168,85,247,0.15)', marginBottom: '20px' }}>
                   <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '0 0 4px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Recording time-out for</p>
-                  <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--ink)', margin: 0 }}>{employee.name}</p>
+                  <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--ink)', margin: 0 }}>{employee.name}</p>
                 </div>
                 {timeoutError && <div className="msg-error"><p>{timeoutError}</p></div>}
                 <button type="submit" disabled={timeoutLoading} className="btn-primary">
@@ -288,12 +314,12 @@ export default function EmployeeTimein() {
             {/* TIME OUT result */}
             {mode === 'timeout' && timeoutResult && (
               <div className="animate-fade-up">
-                <div style={{ borderLeft: '2px solid var(--ink-2)', paddingLeft: '14px', marginBottom: '20px' }}>
-                  <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>{timeoutResult.name}</p>
+                <div style={{ marginBottom: '18px', padding: '16px', borderRadius: '14px', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                  <p style={{ fontSize: '17px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>{timeoutResult.name}</p>
                   <p style={{ fontSize: '11px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>{timeoutResult.email}</p>
                 </div>
                 <div style={{ marginBottom: '16px' }}><StatusBadge status={timeoutResult.status} /></div>
-                <div style={{ borderTop: '1px solid var(--line-2)' }}>
+                <div>
                   {[
                     { label: 'Time In', value: timeoutResult.time_in_formatted },
                     { label: 'Time Out', value: timeoutResult.time_out_formatted },
@@ -302,7 +328,7 @@ export default function EmployeeTimein() {
                     { label: 'Date', value: timeoutResult.date },
                   ].map(({ label, value }) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--line-2)' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--ink-3)' }}>{label}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--ink-3)' }}>{label}</span>
                       <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--ink)', fontFamily: 'var(--mono)' }}>{value}</span>
                     </div>
                   ))}
@@ -315,12 +341,12 @@ export default function EmployeeTimein() {
             {mode === 'setpassword' && !spResult && (
               <form onSubmit={handleSetPassword} className="animate-slide-down">
                 <div style={{ marginBottom: '16px' }}>
-                  <label className="field-label">Current Password <span style={{ color: 'var(--ink-4)' }}>(if already set)</span></label>
+                  <label className="field-label">Current Password <span style={{ color: 'var(--ink-4)', textTransform: 'none', letterSpacing: 0 }}>(if already set)</span></label>
                   <input className="dark-input" type="password" value={spCurrent}
                     onChange={e => setSpCurrent(e.target.value)}
                     placeholder="Leave blank if setting for first time" />
-                  <p style={{ fontSize: '10px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '6px 0 0', letterSpacing: '0.04em' }}>
-                    Forgot your password? Contact your manager to reset it.
+                  <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '6px 0 0', lineHeight: 1.5 }}>
+                    Forgot your password? Use the reset link on the login page.
                   </p>
                 </div>
                 <div style={{ marginBottom: '14px' }}>
@@ -345,9 +371,9 @@ export default function EmployeeTimein() {
             {/* SET PASSWORD result */}
             {mode === 'setpassword' && spResult && (
               <div className="animate-fade-up">
-                <div style={{ borderLeft: '2px solid var(--present)', paddingLeft: '14px', marginBottom: '20px' }}>
+                <div style={{ padding: '18px', borderRadius: '14px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', marginBottom: '18px' }}>
                   <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 4px' }}>{spResult.name}</p>
-                  <p style={{ fontSize: '11px', color: 'var(--present)', fontFamily: 'var(--mono)', margin: 0 }}>Password updated successfully</p>
+                  <p style={{ fontSize: '12px', color: 'var(--present)', fontFamily: 'var(--mono)', margin: 0 }}>✓ Password updated successfully</p>
                 </div>
                 <button onClick={() => { setSpResult(null); switchMode('timein'); }} className="btn-ghost">
                   Go to Time In

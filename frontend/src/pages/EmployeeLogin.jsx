@@ -10,7 +10,7 @@ export default function EmployeeLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [fpMode, setFpMode] = useState('login'); // 'login' | 'request' | 'verify'
+  const [fpMode, setFpMode] = useState('login');
   const [fpEmail, setFpEmail] = useState('');
   const [fpOtp, setFpOtp] = useState('');
   const [fpNew, setFpNew] = useState('');
@@ -61,23 +61,36 @@ export default function EmployeeLogin() {
   const modeLabel = { login: 'Employee Sign In', request: 'Reset Password', verify: 'Enter Reset Code' };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative' }}>
-      <div className="bg-glow" />
-      <div style={{ width: '100%', maxWidth: '360px', position: 'relative', zIndex: 1 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative', overflow: 'hidden' }}>
+      {/* Background orbs */}
+      <div className="orb orb-violet" style={{ width: 400, height: 400, top: '-15%', left: '-10%', opacity: 0.4 }} />
+      <div className="orb orb-pink"   style={{ width: 300, height: 300, bottom: '-10%', right: '-5%', opacity: 0.3 }} />
+      <div className="orb orb-cyan"   style={{ width: 200, height: 200, top: '60%', left: '60%', opacity: 0.15 }} />
 
-        <div className="animate-fade-down" style={{ marginBottom: '40px', textAlign: 'center' }}>
-          <h1 className="wordmark">Time<span style={{ color: 'var(--accent)' }}>Track</span></h1>
+      <div style={{ width: '100%', maxWidth: '380px', position: 'relative', zIndex: 1 }}>
+
+        {/* Wordmark */}
+        <div className="animate-fade-down" style={{ marginBottom: '36px', textAlign: 'center' }}>
+          <h1 className="wordmark" style={{ fontSize: '28px' }}>
+            Time<span className="grad-text">Track</span>
+          </h1>
+          <p style={{ fontSize: '12px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '6px' }}>
+            Employee Portal
+          </p>
         </div>
 
         <div className="panel animate-rotate-in">
-          <div className="panel-header accent-bar">
-            <span className="panel-title">{modeLabel[fpMode]}</span>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)', display: 'inline-block' }} />
+          {/* Gradient top bar */}
+          <div style={{ height: '3px', background: 'var(--hero-gradient)', flexShrink: 0 }} />
+
+          <div className="panel-header" style={{ borderTop: 'none' }}>
+            <span className="panel-title" style={{ color: 'var(--ink-2)' }}>{modeLabel[fpMode]}</span>
+            <span className="animate-pulse-glow" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
           </div>
 
           {/* ── LOGIN ── */}
           {fpMode === 'login' && (
-            <form onSubmit={handleLogin} style={{ padding: '24px 20px' }}>
+            <form onSubmit={handleLogin} style={{ padding: '24px 22px' }}>
               <div style={{ marginBottom: '16px' }}>
                 <label className="field-label">Work Email</label>
                 <input className="dark-input" type="email" value={email}
@@ -93,25 +106,23 @@ export default function EmployeeLogin() {
               <div style={{ marginBottom: '22px', textAlign: 'right' }}>
                 <span onClick={() => { setFpMode('request'); setFpEmail(email); setFpError(''); setFpSuccess(''); }}
                   style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', cursor: 'pointer', letterSpacing: '0.04em', transition: 'color 0.15s' }}
-                  onMouseEnter={e => e.target.style.color = 'var(--accent)'}
+                  onMouseEnter={e => e.target.style.color = '#c084fc'}
                   onMouseLeave={e => e.target.style.color = 'var(--ink-3)'}>
                   Forgot password?
                 </span>
               </div>
-
               {fpSuccess && <div className="msg-success"><p>{fpSuccess}</p></div>}
               {error && <div className="msg-error"><p>{error}</p></div>}
-
               <button type="submit" disabled={loading || !email || !password} className="btn-primary">
-                {loading ? 'Signing in…' : 'Sign In →'}
+                {loading ? 'Signing in…' : 'Sign In'}
               </button>
             </form>
           )}
 
           {/* ── REQUEST OTP ── */}
           {fpMode === 'request' && (
-            <form onSubmit={handleRequestReset} style={{ padding: '24px 20px' }}>
-              <p style={{ fontSize: '12px', color: 'var(--ink-2)', marginBottom: '20px', fontFamily: 'var(--mono)', lineHeight: 1.6 }}>
+            <form onSubmit={handleRequestReset} style={{ padding: '24px 22px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--ink-2)', marginBottom: '20px', lineHeight: 1.6 }}>
                 Enter your work email and we'll send a 6-digit reset code.
               </p>
               <div style={{ marginBottom: '20px' }}>
@@ -122,7 +133,7 @@ export default function EmployeeLogin() {
               </div>
               {fpError && <div className="msg-error"><p>{fpError}</p></div>}
               <button type="submit" disabled={fpLoading || !fpEmail} className="btn-primary" style={{ marginBottom: '8px' }}>
-                {fpLoading ? 'Sending…' : 'Send Reset Code →'}
+                {fpLoading ? 'Sending…' : 'Send Reset Code'}
               </button>
               <button type="button" onClick={backToLogin} className="btn-ghost">
                 ← Back to Sign In
@@ -132,14 +143,14 @@ export default function EmployeeLogin() {
 
           {/* ── VERIFY OTP ── */}
           {fpMode === 'verify' && (
-            <form onSubmit={handleResetPassword} style={{ padding: '24px 20px' }}>
+            <form onSubmit={handleResetPassword} style={{ padding: '24px 22px' }}>
               {fpSuccess && <div className="msg-success"><p>{fpSuccess}</p></div>}
               <div style={{ marginBottom: '16px' }}>
                 <label className="field-label">Reset Code</label>
                 <input className="dark-input" type="text"
                   value={fpOtp} onChange={e => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000" required autoFocus maxLength={6}
-                  style={{ letterSpacing: '0.3em', fontSize: '20px', textAlign: 'center' }} />
+                  style={{ letterSpacing: '0.4em', fontSize: '22px', textAlign: 'center', fontFamily: 'var(--mono)' }} />
               </div>
               <div style={{ marginBottom: '14px' }}>
                 <label className="field-label">New Password</label>
@@ -155,7 +166,7 @@ export default function EmployeeLogin() {
               </div>
               {fpError && <div className="msg-error"><p>{fpError}</p></div>}
               <button type="submit" disabled={fpLoading || !fpOtp || !fpNew || !fpConfirm} className="btn-primary" style={{ marginBottom: '8px' }}>
-                {fpLoading ? 'Resetting…' : 'Set New Password →'}
+                {fpLoading ? 'Resetting…' : 'Set New Password'}
               </button>
               <button type="button" onClick={() => { setFpMode('request'); setFpError(''); setFpSuccess(''); }} className="btn-ghost">
                 Resend code
@@ -166,8 +177,8 @@ export default function EmployeeLogin() {
 
         <p className="animate-fade-up" style={{ textAlign: 'center', fontSize: '11px', color: 'var(--ink-3)', marginTop: '20px', fontFamily: 'var(--mono)', animationDelay: '0.4s' }}>
           Manager?{' '}
-          <a href="/admin/login" style={{ color: 'var(--ink-2)', textDecoration: 'none' }}
-            onMouseEnter={e => e.target.style.color = 'var(--accent)'}
+          <a href="/admin/login" style={{ color: 'var(--ink-2)', textDecoration: 'none', transition: 'color 0.15s' }}
+            onMouseEnter={e => e.target.style.color = '#c084fc'}
             onMouseLeave={e => e.target.style.color = 'var(--ink-2)'}>
             Sign in to Manager Panel →
           </a>

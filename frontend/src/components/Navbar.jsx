@@ -21,20 +21,17 @@ export default function Navbar() {
   return (
     <nav style={{
       borderBottom: '1px solid var(--line)',
-      background: 'rgba(17,19,24,0.85)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
+      background: 'rgba(20,22,39,0.9)',
+      backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
       position: 'sticky', top: 0, zIndex: 40,
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '54px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '58px' }}>
 
           {/* Wordmark */}
-          <span style={{
-            fontFamily: 'var(--mono)', fontSize: '13px', letterSpacing: '0.1em',
-            color: 'var(--ink)', fontWeight: '500', textTransform: 'uppercase',
-          }}>
-            Time<span style={{ color: 'var(--accent)' }}>Track</span>
+          <span className="wordmark">
+            Time<span className="grad-text">Track</span>
           </span>
 
           {/* Desktop links */}
@@ -47,18 +44,21 @@ export default function Navbar() {
                   fontFamily: 'var(--mono)',
                   letterSpacing: '0.06em',
                   color: active ? 'var(--ink)' : 'var(--ink-3)',
-                  background: active ? 'var(--glass-bg)' : 'transparent',
-                  border: active ? '1px solid var(--line)' : '1px solid transparent',
-                  padding: '6px 14px',
-                  borderRadius: '6px',
+                  background: active
+                    ? 'linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(99,102,241,0.12) 100%)'
+                    : 'transparent',
+                  border: active ? '1px solid rgba(168,85,247,0.25)' : '1px solid transparent',
+                  padding: '7px 14px',
+                  borderRadius: '10px',
                   display: 'flex', alignItems: 'center',
                   fontWeight: active ? '500' : '400',
-                  transition: 'all 0.15s',
+                  transition: 'all 0.2s',
                   textDecoration: 'none',
                   textTransform: 'uppercase',
+                  boxShadow: active ? '0 0 14px rgba(168,85,247,0.12)' : 'none',
                 }}
-                onMouseEnter={e => { if (!active) { e.target.style.color = 'var(--ink-2)'; } }}
-                onMouseLeave={e => { if (!active) { e.target.style.color = 'var(--ink-3)'; } }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.color = 'var(--ink-2)'; }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'var(--ink-3)'; }}
                 >
                   {label}
                 </Link>
@@ -69,24 +69,34 @@ export default function Navbar() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button onClick={handleLogout} className="hidden sm:block" style={{
               fontSize: '10px', color: 'var(--ink-3)', fontFamily: 'var(--mono)',
-              letterSpacing: '0.08em', background: 'none', border: '1px solid var(--line)',
-              cursor: 'pointer', textTransform: 'uppercase', padding: '5px 12px', borderRadius: '6px',
-              transition: 'all 0.15s',
+              letterSpacing: '0.08em', background: 'none',
+              border: '1px solid var(--line)',
+              cursor: 'pointer', textTransform: 'uppercase', padding: '6px 14px',
+              borderRadius: '10px', transition: 'all 0.2s',
             }}
-            onMouseEnter={e => { e.target.style.color = 'var(--absent)'; e.target.style.borderColor = 'rgba(244,63,94,0.3)'; }}
-            onMouseLeave={e => { e.target.style.color = 'var(--ink-3)'; e.target.style.borderColor = 'var(--line)'; }}
+            onMouseEnter={e => {
+              e.target.style.color = 'var(--absent)';
+              e.target.style.borderColor = 'rgba(248,113,113,0.35)';
+              e.target.style.background = 'rgba(248,113,113,0.06)';
+            }}
+            onMouseLeave={e => {
+              e.target.style.color = 'var(--ink-3)';
+              e.target.style.borderColor = 'var(--line)';
+              e.target.style.background = 'none';
+            }}
             >
               Sign out
             </button>
 
             {/* Hamburger */}
             <button onClick={() => setMenuOpen(o => !o)} className="sm:hidden"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {[0,1,2].map(i => (
                 <span key={i} style={{
-                  display: 'block', width: '18px', height: '1.5px', background: 'var(--ink-2)',
-                  transition: 'all 0.2s',
-                  transform: menuOpen ? (i === 0 ? 'rotate(45deg) translate(4px,4px)' : i === 2 ? 'rotate(-45deg) translate(4px,-4px)' : 'none') : 'none',
+                  display: 'block', width: '20px', height: '1.5px',
+                  background: menuOpen ? 'var(--ink-2)' : 'var(--ink-2)',
+                  transition: 'all 0.25s',
+                  transform: menuOpen ? (i === 0 ? 'rotate(45deg) translate(4.5px,4.5px)' : i === 2 ? 'rotate(-45deg) translate(4.5px,-4.5px)' : 'none') : 'none',
                   opacity: menuOpen && i === 1 ? 0 : 1,
                 }} />
               ))}
@@ -97,30 +107,31 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="sm:hidden animate-slide-down" style={{ borderTop: '1px solid var(--line)', background: 'var(--base-2)', padding: '8px 12px 12px' }}>
+        <div className="sm:hidden animate-slide-down" style={{ borderTop: '1px solid var(--line)', background: 'rgba(26,29,46,0.98)', padding: '10px 14px 14px', backdropFilter: 'blur(20px)' }}>
           {navLinks.map(({ to, label }) => {
             const active = pathname === to;
             return (
               <Link key={to} to={to} onClick={() => setMenuOpen(false)} style={{
-                display: 'flex', alignItems: 'center', padding: '13px 12px',
+                display: 'flex', alignItems: 'center', padding: '13px 14px',
                 fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.08em',
-                textTransform: 'uppercase', color: active ? 'var(--accent)' : 'var(--ink-2)',
-                background: active ? 'var(--accent-dim)' : 'transparent',
-                borderRadius: '8px', marginBottom: '2px', textDecoration: 'none',
-                transition: 'all 0.15s', gap: '8px',
-                borderLeft: active ? '2px solid var(--accent)' : '2px solid transparent',
+                textTransform: 'uppercase',
+                color: active ? '#c084fc' : 'var(--ink-2)',
+                background: active ? 'linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(99,102,241,0.1) 100%)' : 'transparent',
+                borderRadius: '12px', marginBottom: '2px', textDecoration: 'none',
+                transition: 'all 0.15s',
+                borderLeft: active ? '2px solid #a855f7' : '2px solid transparent',
               }}>
                 {label}
               </Link>
             );
           })}
-          <div style={{ height: '1px', background: 'var(--line)', margin: '6px 0 8px' }} />
+          <div style={{ height: '1px', background: 'var(--line)', margin: '8px 0 10px' }} />
           <button onClick={handleLogout} style={{
-            display: 'flex', width: '100%', padding: '13px 12px', alignItems: 'center',
+            display: 'flex', width: '100%', padding: '13px 14px', alignItems: 'center',
             fontSize: '11px', color: 'var(--absent)', fontFamily: 'var(--mono)',
-            letterSpacing: '0.08em', background: 'rgba(244,63,94,0.05)',
-            border: '1px solid rgba(244,63,94,0.15)', cursor: 'pointer',
-            textTransform: 'uppercase', borderRadius: '8px',
+            letterSpacing: '0.08em', background: 'rgba(248,113,113,0.06)',
+            border: '1px solid rgba(248,113,113,0.2)', cursor: 'pointer',
+            textTransform: 'uppercase', borderRadius: '12px',
           }}>
             Sign out
           </button>
