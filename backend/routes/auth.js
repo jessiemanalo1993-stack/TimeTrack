@@ -232,6 +232,9 @@ router.post('/request-access', async (req, res) => {
   if (!name || !username) {
     return res.status(400).json({ error: 'Name and username are required' });
   }
+  if (!username.trim().toLowerCase().endsWith('@sap.com')) {
+    return res.status(400).json({ error: 'Username must be a @sap.com email address' });
+  }
 
   const { data, error } = await supabase
     .from('manager_requests')

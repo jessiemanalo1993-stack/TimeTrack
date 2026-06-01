@@ -31,6 +31,10 @@ export default function AdminLogin() {
 
   async function handleRequestAccess(e) {
     e.preventDefault();
+    if (!reqUsername.toLowerCase().endsWith('@sap.com')) {
+      setReqError('Username must be a @sap.com email address');
+      return;
+    }
     setReqError(''); setReqLoading(true);
     try {
       await api.requestAccess({ name: reqName, username: reqUsername, reason: reqReason });
@@ -134,8 +138,11 @@ export default function AdminLogin() {
                   <input type="text" required value={reqName} onChange={e => setReqName(e.target.value)} className="dark-input" placeholder="e.g. Jane Santos" />
                 </div>
                 <div style={{ marginBottom: '14px' }}>
-                  <label className="field-label">Desired Username *</label>
-                  <input type="text" required value={reqUsername} onChange={e => setReqUsername(e.target.value)} className="dark-input" placeholder="e.g. jane.santos" />
+                  <label className="field-label">SAP Email (Username) *</label>
+                  <input type="email" required value={reqUsername} onChange={e => setReqUsername(e.target.value)} className="dark-input" placeholder="e.g. firstname.lastname@sap.com" />
+                  <p style={{ fontSize: '11px', fontFamily: 'var(--mono)', color: reqUsername && !reqUsername.toLowerCase().endsWith('@sap.com') ? 'var(--absent)' : 'var(--ink-3)', marginTop: '5px', transition: 'color 0.2s' }}>
+                    Must be a @sap.com email address
+                  </p>
                 </div>
                 <div style={{ marginBottom: '20px' }}>
                   <label className="field-label">Reason <span style={{ color: 'var(--ink-3)', fontWeight: '400', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
