@@ -22,7 +22,7 @@ function TitleManager() {
 
 function AdminLayout({ children }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', background: 'var(--base)' }}>
       <Navbar />
       <main>{children}</main>
     </div>
