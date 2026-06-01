@@ -92,8 +92,20 @@ router.delete('/managers/:id', authMiddleware, async (req, res) => {
     return res.status(400).json({ error: 'You cannot delete your own account' });
   }
 
+  const { data: manager, error: fetchErr } = await supabase
+    .from('managers')
+    .select('id, username')
+    .eq('id', id)
+    .single();
+
+  if (fetchErr || !manager) return res.status(404).json({ error: 'Manager not found' });
+
   const { error } = await supabase.from('managers').delete().eq('id', id);
   if (error) return res.status(500).json({ error: error.message });
+
+  // Clean up request history so the same email can request access again
+  await supabase.from('manager_requests').delete().eq('username', manager.username);
+
   res.json({ success: true });
 });
 
