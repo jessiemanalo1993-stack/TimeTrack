@@ -229,11 +229,11 @@ export default function EmployeeTimein() {
                     onBlur={e => e.target.style.borderColor = 'var(--line)'}
                   />
                   <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '5px 0 0' }}>
-                    First time? Your password will be set automatically.{' '}
                     <span
                       style={{ color: 'var(--ink-2)', textDecoration: 'underline', cursor: 'pointer' }}
                       onClick={() => switchMode('setpassword')}
                     >Forgot password?</span>
+                    {' '}Contact your manager to reset.
                   </p>
                 </div>
 
