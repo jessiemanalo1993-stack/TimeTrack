@@ -262,20 +262,42 @@ router.post('/request-access', async (req, res) => {
   if (!name || !username) {
     return res.status(400).json({ error: 'Name and username are required' });
   }
-  if (!username.trim().toLowerCase().endsWith('@sap.com')) {
+  const clean = username.trim().toLowerCase();
+  if (!clean.endsWith('@sap.com')) {
     return res.status(400).json({ error: 'Username must be a @sap.com email address' });
+  }
+
+  // Block if already an active manager
+  const { data: existing } = await supabase
+    .from('managers')
+    .select('id')
+    .eq('username', clean)
+    .single();
+  if (existing) {
+    return res.status(409).json({ error: 'An account with that username already exists' });
+  }
+
+  // Block if a pending or approved request already exists for this username
+  const { data: existingReq } = await supabase
+    .from('manager_requests')
+    .select('id, status')
+    .eq('username', clean)
+    .in('status', ['Pending', 'Approved'])
+    .single();
+  if (existingReq) {
+    const msg = existingReq.status === 'Pending'
+      ? 'A request for that username is already pending review'
+      : 'That username has already been approved. Please check your email for login details';
+    return res.status(409).json({ error: msg });
   }
 
   const { data, error } = await supabase
     .from('manager_requests')
-    .insert({ name: name.trim(), username: username.trim().toLowerCase(), reason: reason?.trim() || null })
+    .insert({ name: name.trim(), username: clean, reason: reason?.trim() || null })
     .select('id, name, username')
     .single();
 
-  if (error) {
-    if (error.code === '23505') return res.status(409).json({ error: 'A request with that username already exists' });
-    return res.status(500).json({ error: error.message });
-  }
+  if (error) return res.status(500).json({ error: error.message });
   res.status(201).json(data);
 });
 
