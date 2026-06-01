@@ -60,4 +60,7 @@ export const api = {
     const qs = new URLSearchParams(params).toString();
     return downloadFile(`/api/attendance/export${qs ? '?' + qs : ''}`);
   },
+
+  // Email
+  sendReport: (params) => request('POST', '/api/email/send-report', params, true),
 };

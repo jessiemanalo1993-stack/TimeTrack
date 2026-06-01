@@ -16,6 +16,10 @@ export default function Reports() {
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
+  const [sendError, setSendError] = useState('');
 
   useEffect(() => { api.getEmployees().then(setEmployees); }, []);
 
@@ -55,7 +59,21 @@ export default function Reports() {
     Present: preview.filter(r => r.status === 'Present').length,
     Late: preview.filter(r => r.status === 'Late').length,
     Absent: preview.filter(r => r.status === 'Absent').length,
+    'On Leave': preview.filter(r => r.status === 'On Leave').length,
   };
+
+  async function handleSendEmail() {
+    setSending(true); setSendResult(null); setSendError('');
+    try {
+      const params = { date_from: dateFrom, date_to: dateTo };
+      if (employeeFilter) params.employee_id = employeeFilter;
+      if (emailSubject.trim()) params.subject = emailSubject.trim();
+      const result = await api.sendReport(params);
+      setSendResult(result);
+    } catch (err) {
+      setSendError(err.message);
+    } finally { setSending(false); }
+  }
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
@@ -112,6 +130,7 @@ export default function Reports() {
             { label: 'Present', value: counts.Present, color: 'var(--present)' },
             { label: 'Late', value: counts.Late, color: 'var(--late)' },
             { label: 'Absent', value: counts.Absent, color: 'var(--absent)' },
+            { label: 'On Leave', value: counts['On Leave'], color: '#4338ca' },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ background: 'var(--bg)', padding: '12px 20px', flex: 1 }}>
               <p style={{ fontSize: '10px', fontFamily: 'var(--mono)', letterSpacing: '0.07em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 4px' }}>{label}</p>
@@ -166,6 +185,54 @@ export default function Reports() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Send Email panel */}
+      {searched && preview.length > 0 && (
+        <div style={{ border: '1px solid var(--line)', background: 'var(--bg)', marginTop: '20px' }}>
+          <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '12px 16px' }}>
+            <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>Send Report by Email</span>
+          </div>
+          <div style={{ padding: '16px' }}>
+            <p style={{ margin: '0 0 14px', fontSize: '13px', color: 'var(--ink-3)' }}>
+              Send the Excel report to all employees. Subject is optional.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '240px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '4px' }}>Subject (optional)</label>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={e => setEmailSubject(e.target.value)}
+                  placeholder={`Attendance Report — ${dateFrom === dateTo ? dateFrom : dateFrom + ' to ' + dateTo}`}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--line)', borderRadius: '2px', fontSize: '13px', color: 'var(--ink)', background: 'var(--bg)', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' }}
+                  onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleSendEmail}
+                disabled={sending}
+                style={{ padding: '9px 16px', border: '1px solid var(--ink)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: sending ? 'not-allowed' : 'pointer', borderRadius: '2px', whiteSpace: 'nowrap' }}
+              >
+                ✉ {sending ? 'Sending...' : 'Send to All Employees'}
+              </button>
+            </div>
+            {sendResult && (
+              <div style={{ marginTop: '12px', borderLeft: '2px solid var(--present)', paddingLeft: '10px' }}>
+                <p style={{ margin: 0, fontSize: '13px', color: 'var(--present)', fontFamily: 'var(--mono)' }}>
+                  Sent to {sendResult.sent_to} recipient{sendResult.sent_to !== 1 ? 's' : ''}.
+                </p>
+              </div>
+            )}
+            {sendError && (
+              <div style={{ marginTop: '12px', borderLeft: '2px solid var(--absent)', paddingLeft: '10px' }}>
+                <p style={{ margin: 0, fontSize: '13px', color: 'var(--absent)' }}>{sendError}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
