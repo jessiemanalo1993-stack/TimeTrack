@@ -76,12 +76,12 @@ export default function Navbar() {
                 onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'var(--ink-3)'; }}
                 >
                   {label}
-                  {showBadge && (
+                  {to === '/admin/managers' && (
                     <span style={{
                       fontSize: '9px', fontFamily: 'var(--mono)', fontWeight: '700',
                       background: '#fbbf24', color: '#1a1a1a',
                       borderRadius: '20px', padding: '1px 6px', lineHeight: '16px',
-                      minWidth: '16px', textAlign: 'center',
+                      minWidth: '16px', textAlign: 'center', display: 'inline-block',
                     }}>
                       {pendingCount}
                     </span>
