@@ -32,8 +32,8 @@ export default function AdminLogin() {
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '72px', height: '72px', background: 'rgba(255,255,255,0.1)', borderRadius: '18px', marginBottom: '14px', backdropFilter: 'blur(8px)' }}>
-            <img src="/logo.png" alt="TimeTrack" style={{ width: '52px', height: '52px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '96px', height: '96px', background: 'rgba(255,255,255,0.1)', borderRadius: '24px', marginBottom: '14px', backdropFilter: 'blur(8px)' }}>
+            <img src="/logo.png" alt="TimeTrack" style={{ width: '72px', height: '72px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
           </div>
           <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#fff', margin: '0 0 4px', letterSpacing: '-0.01em' }}>
             TimeTrack Console
