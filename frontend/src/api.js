@@ -40,6 +40,10 @@ export const api = {
     request('POST', '/api/auth/login', { username, password }),
   employeeLogin: (email, password) =>
     request('POST', '/api/auth/employee-login', { email, password }),
+  requestPasswordReset: (email) =>
+    request('POST', '/api/auth/request-reset', { email }),
+  resetPassword: (email, otp, new_password) =>
+    request('POST', '/api/auth/reset-password', { email, otp, new_password }),
   verifyAdminPassword: (password) =>
     request('POST', '/api/auth/verify-password', { password }, true),
 
