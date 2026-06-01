@@ -37,4 +37,16 @@ router.post('/login', loginLimiter, (req, res) => {
   res.json({ token });
 });
 
+// POST /api/auth/verify-password — admin only, confirms password before destructive actions
+const authMiddleware = require('../middleware/auth');
+router.post('/verify-password', authMiddleware, loginLimiter, (req, res) => {
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: 'Password is required' });
+
+  const valid = timingSafeCompare(password, process.env.ADMIN_PASSWORD || '');
+  if (!valid) return res.status(401).json({ error: 'Incorrect password' });
+
+  res.json({ verified: true });
+});
+
 module.exports = router;

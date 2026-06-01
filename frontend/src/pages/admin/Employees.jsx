@@ -37,6 +37,9 @@ export default function Employees() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -77,8 +80,19 @@ export default function Employees() {
   }
 
   async function handleDelete(id) {
-    try { await api.deleteEmployee(id); setConfirmDelete(null); load(); }
-    catch (err) { alert(err.message); }
+    setDeleteError('');
+    setDeleting(true);
+    try {
+      await api.verifyAdminPassword(deletePassword);
+      await api.deleteEmployee(id);
+      setConfirmDelete(null);
+      setDeletePassword('');
+      load();
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -261,14 +275,32 @@ export default function Employees() {
               <p style={{ fontSize: '12px', color: 'var(--ink-3)', marginBottom: '20px', fontFamily: 'var(--mono)' }}>
                 All attendance records will be removed.
               </p>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={labelStyle}>Manager Password</label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={e => { setDeletePassword(e.target.value); setDeleteError(''); }}
+                  placeholder="Confirm with your password"
+                  autoFocus
+                  style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = 'var(--absent)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                />
+              </div>
+              {deleteError && (
+                <div style={{ borderLeft: '2px solid var(--absent)', paddingLeft: '10px', marginBottom: '14px' }}>
+                  <p style={{ fontSize: '12px', color: 'var(--absent)', margin: 0 }}>{deleteError}</p>
+                </div>
+              )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <button onClick={() => setConfirmDelete(null)}
+                <button onClick={() => { setConfirmDelete(null); setDeletePassword(''); setDeleteError(''); }}
                   style={{ padding: '9px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink-2)', fontSize: '12px', fontFamily: 'var(--mono)', cursor: 'pointer', borderRadius: '2px' }}>
                   Cancel
                 </button>
-                <button onClick={() => handleDelete(confirmDelete.id)}
-                  style={{ padding: '9px', border: '1px solid var(--absent)', background: 'var(--absent)', color: '#fff', fontSize: '12px', fontFamily: 'var(--mono)', cursor: 'pointer', borderRadius: '2px', fontWeight: '600' }}>
-                  Delete
+                <button onClick={() => handleDelete(confirmDelete.id)} disabled={deleting || !deletePassword}
+                  style={{ padding: '9px', border: '1px solid var(--absent)', background: (deleting || !deletePassword) ? 'var(--line)' : 'var(--absent)', color: (deleting || !deletePassword) ? 'var(--ink-3)' : '#fff', fontSize: '12px', fontFamily: 'var(--mono)', cursor: (deleting || !deletePassword) ? 'not-allowed' : 'pointer', borderRadius: '2px', fontWeight: '600' }}>
+                  {deleting ? 'Verifying...' : 'Delete'}
                 </button>
               </div>
             </div>

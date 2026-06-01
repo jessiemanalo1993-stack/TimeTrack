@@ -38,6 +38,8 @@ export const api = {
   // Auth
   login: (username, password) =>
     request('POST', '/api/auth/login', { username, password }),
+  verifyAdminPassword: (password) =>
+    request('POST', '/api/auth/verify-password', { password }, true),
 
   // Employees
   getEmployees: () => request('GET', '/api/employees', null, true),
