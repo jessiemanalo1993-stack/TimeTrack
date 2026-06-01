@@ -17,6 +17,7 @@ export default function Reports() {
   const [downloading, setDownloading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [emailSubject, setEmailSubject] = useState('');
+  const [emailRecipient, setEmailRecipient] = useState('');
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
   const [sendError, setSendError] = useState('');
@@ -68,6 +69,7 @@ export default function Reports() {
       const params = { date_from: dateFrom, date_to: dateTo };
       if (employeeFilter) params.employee_id = employeeFilter;
       if (emailSubject.trim()) params.subject = emailSubject.trim();
+      if (emailRecipient) params.recipient_id = emailRecipient;
       const result = await api.sendReport(params);
       setSendResult(result);
     } catch (err) {
@@ -196,9 +198,16 @@ export default function Reports() {
           </div>
           <div style={{ padding: '16px' }}>
             <p style={{ margin: '0 0 14px', fontSize: '13px', color: 'var(--ink-3)' }}>
-              Send the Excel report to all employees. Subject is optional.
+              Send the Excel report by email. Leave recipient blank to send to all employees.
             </p>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ minWidth: '180px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '4px' }}>Recipient</label>
+                <select value={emailRecipient} onChange={e => setEmailRecipient(e.target.value)} style={selectStyle}>
+                  <option value="">All Employees</option>
+                  {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
+              </div>
               <div style={{ flex: 1, minWidth: '240px' }}>
                 <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '4px' }}>Subject (optional)</label>
                 <input
@@ -217,7 +226,7 @@ export default function Reports() {
                 disabled={sending}
                 style={{ padding: '9px 16px', border: '1px solid var(--ink)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: sending ? 'not-allowed' : 'pointer', borderRadius: '2px', whiteSpace: 'nowrap' }}
               >
-                ✉ {sending ? 'Sending...' : 'Send to All Employees'}
+                ✉ {sending ? 'Sending...' : emailRecipient ? 'Send to Employee' : 'Send to All Employees'}
               </button>
             </div>
             {sendResult && (

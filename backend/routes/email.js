@@ -9,7 +9,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // POST /api/email/send-report — admin only
 router.post('/send-report', authMiddleware, async (req, res) => {
-  const { date_from, date_to, employee_id, subject } = req.body;
+  const { date_from, date_to, employee_id, subject, recipient_id } = req.body;
   const from = date_from || todayLocal();
   const to = date_to || todayLocal();
 
@@ -27,10 +27,11 @@ router.post('/send-report', authMiddleware, async (req, res) => {
   if (attError) return res.status(500).json({ error: attError.message });
   if (!records.length) return res.status(400).json({ error: 'No attendance records found for the selected range' });
 
-  // 2. Fetch all employees to send to
-  const { data: employees, error: empError } = await supabase
-    .from('employees')
-    .select('id, name, email');
+  // 2. Fetch recipients
+  let recipientQuery = supabase.from('employees').select('id, name, email');
+  if (recipient_id) recipientQuery = recipientQuery.eq('id', recipient_id);
+
+  const { data: employees, error: empError } = await recipientQuery;
   if (empError) return res.status(500).json({ error: empError.message });
   if (!employees.length) return res.status(400).json({ error: 'No employees found' });
 
