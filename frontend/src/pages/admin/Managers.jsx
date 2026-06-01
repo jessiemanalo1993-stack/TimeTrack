@@ -16,12 +16,43 @@ export default function Managers() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
+  const [requests, setRequests] = useState([]);
+  const [reqLoading, setReqLoading] = useState(true);
+  const [approveModal, setApproveModal] = useState(null);
+  const [approvePassword, setApprovePassword] = useState('');
+  const [approving, setApproving] = useState(false);
+  const [approveError, setApproveError] = useState('');
+  const [rejecting, setRejecting] = useState(null);
+
+  async function loadRequests() {
+    setReqLoading(true);
+    try { setRequests(await api.getManagerRequests()); }
+    finally { setReqLoading(false); }
+  }
+
+  async function handleApprove(e) {
+    e.preventDefault(); setApproving(true); setApproveError('');
+    try {
+      await api.approveManagerRequest(approveModal.id, approvePassword);
+      setApproveModal(null); setApprovePassword('');
+      load(); loadRequests();
+    } catch (err) { setApproveError(err.message); }
+    finally { setApproving(false); }
+  }
+
+  async function handleReject(id) {
+    setRejecting(id);
+    try { await api.rejectManagerRequest(id); loadRequests(); }
+    catch (err) { alert(err.message); }
+    finally { setRejecting(null); }
+  }
+
   async function load() {
     setLoading(true);
     try { setManagers(await api.getManagers()); }
     finally { setLoading(false); }
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); loadRequests(); }, []);
 
   async function handleSave(e) {
     e.preventDefault(); setSaving(true); setError('');
@@ -102,6 +133,96 @@ export default function Managers() {
           </div>
         )}
       </div>
+
+      {/* Access Requests panel — visible to all managers */}
+      <div className="panel" style={{ marginTop: '24px' }}>
+        <div className="panel-header accent-bar">
+          <span className="panel-title">Access Requests</span>
+          {requests.filter(r => r.status === 'Pending').length > 0 && (
+            <span style={{ fontSize: '10px', fontFamily: 'var(--mono)', background: 'rgba(251,191,36,0.15)', color: 'var(--late)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: '8px', padding: '2px 8px' }}>
+              {requests.filter(r => r.status === 'Pending').length} pending
+            </span>
+          )}
+        </div>
+        {reqLoading ? (
+          <p style={{ padding: '40px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>Loading…</p>
+        ) : requests.length === 0 ? (
+          <p style={{ padding: '40px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>No access requests.</p>
+        ) : (
+          <div className="table-scroll">
+            <table className="dark-table">
+              <thead>
+                <tr>{['Name', 'Username', 'Reason', 'Requested On', 'Status', isOwner ? 'Actions' : ''].map((h, i) => <th key={i}>{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {requests.map(r => (
+                  <tr key={r.id}>
+                    <td style={{ fontWeight: '600' }}>{r.name}</td>
+                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{r.username}</td>
+                    <td style={{ fontSize: '12px', color: 'var(--ink-2)', maxWidth: '180px' }}>
+                      <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.reason || '—'}</span>
+                    </td>
+                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>
+                      {new Date(r.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })}
+                    </td>
+                    <td>
+                      <span style={{
+                        fontSize: '10px', fontFamily: 'var(--mono)', padding: '3px 9px', borderRadius: '6px',
+                        background: r.status === 'Pending' ? 'rgba(251,191,36,0.12)' : r.status === 'Approved' ? 'rgba(74,222,128,0.12)' : 'rgba(248,113,113,0.12)',
+                        color: r.status === 'Pending' ? 'var(--late)' : r.status === 'Approved' ? 'var(--present)' : 'var(--absent)',
+                        border: `1px solid ${r.status === 'Pending' ? 'rgba(251,191,36,0.3)' : r.status === 'Approved' ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.3)'}`,
+                      }}>{r.status}</span>
+                    </td>
+                    <td>
+                      {isOwner && r.status === 'Pending' && (
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button onClick={() => { setApproveModal(r); setApprovePassword(''); setApproveError(''); }}
+                            style={{ padding: '4px 12px', border: '1px solid rgba(74,222,128,0.3)', borderRadius: '8px', background: 'rgba(74,222,128,0.1)', color: 'var(--present)', fontSize: '11px', fontFamily: 'var(--mono)', cursor: 'pointer', transition: 'all 0.15s' }}>
+                            Approve
+                          </button>
+                          <button onClick={() => handleReject(r.id)} disabled={rejecting === r.id}
+                            style={{ padding: '4px 12px', border: '1px solid rgba(248,113,113,0.3)', borderRadius: '8px', background: 'rgba(248,113,113,0.1)', color: 'var(--absent)', fontSize: '11px', fontFamily: 'var(--mono)', cursor: 'pointer', opacity: rejecting === r.id ? 0.5 : 1, transition: 'all 0.15s' }}>
+                            {rejecting === r.id ? '…' : 'Reject'}
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Approve Modal */}
+      {approveModal && (
+        <div style={overlayStyle} className="modal-overlay">
+          <div className="panel modal-box" style={{ width: '100%', maxWidth: '380px' }}>
+            <div style={{ height: '3px', background: 'var(--hero-gradient)' }} />
+            <div className="panel-header" style={{ borderTop: 'none' }}>
+              <span className="panel-title">Approve Request</span>
+              <button onClick={() => setApproveModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '22px', color: 'var(--ink-3)', lineHeight: 1 }}>×</button>
+            </div>
+            <form onSubmit={handleApprove} style={{ padding: '22px' }}>
+              <p style={{ fontSize: '15px', color: 'var(--ink)', marginBottom: '2px', fontWeight: '600' }}>{approveModal.name}</p>
+              <p style={{ fontSize: '12px', color: 'var(--ink-3)', marginBottom: '18px', fontFamily: 'var(--mono)' }}>@{approveModal.username}</p>
+              <div style={{ marginBottom: '20px' }}>
+                <label className="field-label">Set Initial Password *</label>
+                <input type="password" required minLength={6} value={approvePassword}
+                  onChange={e => { setApprovePassword(e.target.value); setApproveError(''); }}
+                  placeholder="Min. 6 characters" autoFocus className="dark-input" />
+                <p style={{ fontSize: '11px', color: 'var(--ink-3)', marginTop: '6px' }}>The new manager will use this password to sign in.</p>
+              </div>
+              {approveError && <div className="msg-error" style={{ marginBottom: '14px' }}><p>{approveError}</p></div>}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button type="button" onClick={() => setApproveModal(null)} className="btn-ghost">Cancel</button>
+                <button type="submit" disabled={approving} className="btn-primary">{approving ? 'Approving…' : 'Approve'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add Manager Modal */}
       {modal && (

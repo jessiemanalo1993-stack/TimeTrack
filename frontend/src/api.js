@@ -41,6 +41,10 @@ export const api = {
   getManagers: () => request('GET', '/api/auth/managers', null, true),
   createManager: (data) => request('POST', '/api/auth/managers', data, true),
   deleteManager: (id) => request('DELETE', `/api/auth/managers/${id}`, null, true),
+  requestAccess: (data) => request('POST', '/api/auth/request-access', data),
+  getManagerRequests: () => request('GET', '/api/auth/manager-requests', null, true),
+  approveManagerRequest: (id, password) => request('POST', `/api/auth/manager-requests/${id}/approve`, { password }, true),
+  rejectManagerRequest: (id) => request('DELETE', `/api/auth/manager-requests/${id}`, null, true),
   employeeLogin: (email, password) =>
     request('POST', '/api/auth/employee-login', { email, password }),
   requestPasswordReset: (email) =>

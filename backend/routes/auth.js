@@ -226,4 +226,76 @@ router.post('/employee-login', loginLimiter, async (req, res) => {
   res.json({ name: employee.name, email: employee.email });
 });
 
+// POST /api/auth/request-access — public, submit a manager access request
+router.post('/request-access', async (req, res) => {
+  const { name, username, reason } = req.body;
+  if (!name || !username) {
+    return res.status(400).json({ error: 'Name and username are required' });
+  }
+
+  const { data, error } = await supabase
+    .from('manager_requests')
+    .insert({ name: name.trim(), username: username.trim().toLowerCase(), reason: reason?.trim() || null })
+    .select('id, name, username')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') return res.status(409).json({ error: 'A request with that username already exists' });
+    return res.status(500).json({ error: error.message });
+  }
+  res.status(201).json(data);
+});
+
+// GET /api/auth/manager-requests — admin only, list all pending requests
+router.get('/manager-requests', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase
+    .from('manager_requests')
+    .select('id, name, username, reason, status, created_at')
+    .order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// POST /api/auth/manager-requests/:id/approve — admin only, approve and create manager account
+router.post('/manager-requests/:id/approve', authMiddleware, async (req, res) => {
+  if (req.user.username !== 'admin') {
+    return res.status(403).json({ error: 'Only the admin account can approve requests' });
+  }
+  const { password } = req.body;
+  if (!password || password.length < 6) {
+    return res.status(400).json({ error: 'Initial password (min 6 characters) is required' });
+  }
+
+  const { data: request, error: reqErr } = await supabase
+    .from('manager_requests')
+    .select('id, name, username, status')
+    .eq('id', req.params.id)
+    .single();
+
+  if (reqErr || !request) return res.status(404).json({ error: 'Request not found' });
+  if (request.status !== 'Pending') return res.status(400).json({ error: 'Request already processed' });
+
+  const password_hash = await bcrypt.hash(password, 10);
+  const { error: insertErr } = await supabase
+    .from('managers')
+    .insert({ name: request.name, username: request.username, password_hash });
+
+  if (insertErr) {
+    if (insertErr.code === '23505') return res.status(409).json({ error: 'Username already exists as a manager' });
+    return res.status(500).json({ error: insertErr.message });
+  }
+
+  await supabase.from('manager_requests').update({ status: 'Approved' }).eq('id', request.id);
+  res.json({ success: true });
+});
+
+// DELETE /api/auth/manager-requests/:id — admin only, reject a request
+router.delete('/manager-requests/:id', authMiddleware, async (req, res) => {
+  if (req.user.username !== 'admin') {
+    return res.status(403).json({ error: 'Only the admin account can reject requests' });
+  }
+  await supabase.from('manager_requests').update({ status: 'Rejected' }).eq('id', req.params.id);
+  res.json({ success: true });
+});
+
 module.exports = router;
