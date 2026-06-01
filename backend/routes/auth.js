@@ -35,7 +35,7 @@ router.post('/login', loginLimiter, async (req, res) => {
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
   const token = jwt.sign(
-    { role: 'admin', manager_id: manager.id, name: manager.name },
+    { role: 'admin', manager_id: manager.id, name: manager.name, username: manager.username },
     process.env.JWT_SECRET,
     { expiresIn: '8h' }
   );
@@ -52,8 +52,11 @@ router.get('/managers', authMiddleware, async (req, res) => {
   res.json(data);
 });
 
-// POST /api/auth/managers — create a new manager
+// POST /api/auth/managers — create a new manager (owner only)
 router.post('/managers', authMiddleware, async (req, res) => {
+  if (req.user.username !== 'admin') {
+    return res.status(403).json({ error: 'Only the admin account can add managers' });
+  }
   const { name, username, password } = req.body;
   if (!name || !username || !password) {
     return res.status(400).json({ error: 'Name, username, and password are required' });
@@ -76,8 +79,11 @@ router.post('/managers', authMiddleware, async (req, res) => {
   res.status(201).json(data);
 });
 
-// DELETE /api/auth/managers/:id — delete a manager (cannot delete yourself)
+// DELETE /api/auth/managers/:id — delete a manager (owner only, cannot delete yourself)
 router.delete('/managers/:id', authMiddleware, async (req, res) => {
+  if (req.user.username !== 'admin') {
+    return res.status(403).json({ error: 'Only the admin account can delete managers' });
+  }
   const { id } = req.params;
   if (String(req.user.manager_id) === String(id)) {
     return res.status(400).json({ error: 'You cannot delete your own account' });

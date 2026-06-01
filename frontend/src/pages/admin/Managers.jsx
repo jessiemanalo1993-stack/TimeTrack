@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Managers() {
+  const { username } = useAuth();
+  const isOwner = username === 'admin';
   const [managers, setManagers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
@@ -48,9 +51,11 @@ export default function Managers() {
           <p style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 6px' }}>Access</p>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#ffffff', margin: 0, letterSpacing: '-0.02em' }}>Managers</h1>
         </div>
-        <button onClick={() => { setModal(true); setError(''); setForm({ name: '', username: '', password: '' }); }} className="btn-primary" style={{ width: 'auto', padding: '10px 22px' }}>
-          + Add Manager
-        </button>
+        {isOwner && (
+          <button onClick={() => { setModal(true); setError(''); setForm({ name: '', username: '', password: '' }); }} className="btn-primary" style={{ width: 'auto', padding: '10px 22px' }}>
+            + Add Manager
+          </button>
+        )}
       </div>
 
       <div className="panel">
@@ -76,12 +81,14 @@ export default function Managers() {
                       {new Date(m.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })}
                     </td>
                     <td>
-                      <button onClick={() => setConfirmDelete(m)}
-                        style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--ink-3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, transition: 'color 0.15s' }}
-                        onMouseEnter={e => e.target.style.color = 'var(--absent)'}
-                        onMouseLeave={e => e.target.style.color = 'var(--ink-3)'}>
-                        Delete
-                      </button>
+                      {isOwner && (
+                        <button onClick={() => setConfirmDelete(m)}
+                          style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--ink-3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, transition: 'color 0.15s' }}
+                          onMouseEnter={e => e.target.style.color = 'var(--absent)'}
+                          onMouseLeave={e => e.target.style.color = 'var(--ink-3)'}>
+                          Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

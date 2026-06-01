@@ -1,6 +1,12 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext(null);
+
+function parseToken(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch { return {}; }
+}
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('tt_token'));
@@ -15,8 +21,10 @@ export function AuthProvider({ children }) {
     setToken(null);
   }
 
+  const payload = token ? parseToken(token) : {};
+
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, login, logout }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, login, logout, username: payload.username || '', managerName: payload.name || '' }}>
       {children}
     </AuthContext.Provider>
   );
