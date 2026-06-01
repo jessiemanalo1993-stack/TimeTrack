@@ -19,16 +19,16 @@ router.get('/', async (req, res) => {
 
 // POST /api/employees — create
 router.post('/', async (req, res) => {
-  const { name, email, shift_start, work_days } = req.body;
-  if (!name || !email || !shift_start || !work_days?.length) {
-    return res.status(400).json({ error: 'name, email, shift_start, and work_days are required' });
+  const { name, email, shift_start, shift_end, work_days } = req.body;
+  if (!name || !email || !shift_start || !shift_end || !work_days?.length) {
+    return res.status(400).json({ error: 'name, email, shift_start, shift_end, and work_days are required' });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Invalid email format' });
   }
   const { data, error } = await supabase
     .from('employees')
-    .insert({ name: name.trim(), email: email.toLowerCase().trim(), shift_start, work_days })
+    .insert({ name: name.trim(), email: email.toLowerCase().trim(), shift_start, shift_end, work_days })
     .select()
     .single();
   if (error) {
@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
 
 // PUT /api/employees/:id — update
 router.put('/:id', async (req, res) => {
-  const { name, email, shift_start, work_days } = req.body;
+  const { name, email, shift_start, shift_end, work_days } = req.body;
   const updates = {};
   if (name) updates.name = name.trim();
   if (email) {
@@ -51,6 +51,7 @@ router.put('/:id', async (req, res) => {
     updates.email = email.toLowerCase().trim();
   }
   if (shift_start) updates.shift_start = shift_start;
+  if (shift_end) updates.shift_end = shift_end;
   if (work_days) updates.work_days = work_days;
 
   const { data, error } = await supabase

@@ -4,7 +4,8 @@ import { api } from '../../api';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const EMPTY_FORM = {
   name: '', email: '',
-  shift_start: '09:00', work_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+  shift_start: '09:00', shift_end: '18:00',
+  work_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
 };
 
 const th = { padding: '10px 16px', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.07em', color: 'var(--ink-3)', textTransform: 'uppercase', textAlign: 'left', borderBottom: '1px solid var(--line)', background: 'var(--bg-2)', fontWeight: '500' };
@@ -19,6 +20,12 @@ const labelStyle = {
   display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em',
   color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '5px',
 };
+
+function formatTime(t) {
+  if (!t) return '—';
+  const [h, m] = t.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+}
 
 export default function Employees() {
   const [employees, setEmployees] = useState([]);
@@ -40,7 +47,13 @@ export default function Employees() {
 
   function openCreate() { setForm(EMPTY_FORM); setEditId(null); setError(''); setModal('create'); }
   function openEdit(emp) {
-    setForm({ name: emp.name, email: emp.email, shift_start: emp.shift_start?.slice(0, 5) || '09:00', work_days: emp.work_days || [] });
+    setForm({
+      name: emp.name,
+      email: emp.email,
+      shift_start: emp.shift_start?.slice(0, 5) || '09:00',
+      shift_end: emp.shift_end?.slice(0, 5) || '18:00',
+      work_days: emp.work_days || [],
+    });
     setEditId(emp.id); setError(''); setModal('edit');
   }
 
@@ -62,12 +75,6 @@ export default function Employees() {
   async function handleDelete(id) {
     try { await api.deleteEmployee(id); setConfirmDelete(null); load(); }
     catch (err) { alert(err.message); }
-  }
-
-  function formatTime(t) {
-    if (!t) return '—';
-    const [h, m] = t.split(':').map(Number);
-    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
   }
 
   return (
@@ -99,7 +106,7 @@ export default function Employees() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr>{['Name', 'Email', 'Shift Start', 'Work Days', 'Actions'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
+                <tr>{['Name', 'Email', 'Shift', 'Work Days', 'Actions'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {employees.map(emp => (
@@ -110,7 +117,10 @@ export default function Employees() {
                   >
                     <td style={{ ...td, fontWeight: '500' }}>{emp.name}</td>
                     <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{emp.email}</td>
-                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>{formatTime(emp.shift_start)}</td>
+                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>
+                      {formatTime(emp.shift_start)}
+                      {emp.shift_end && <span style={{ color: 'var(--ink-3)', fontWeight: '400' }}> – {formatTime(emp.shift_end)}</span>}
+                    </td>
                     <td style={td}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                         {(emp.work_days || []).map(d => (
@@ -146,12 +156,12 @@ export default function Employees() {
             </div>
             <form onSubmit={handleSave} style={{ padding: '20px' }}>
               {[
-                { label: 'Full Name *', key: 'name', type: 'text', required: true, placeholder: '' },
-                { label: 'Work Email *', key: 'email', type: 'email', required: true, placeholder: '' },
-              ].map(({ label, key, type, required, placeholder }) => (
+                { label: 'Full Name *', key: 'name', type: 'text', required: true },
+                { label: 'Work Email *', key: 'email', type: 'email', required: true },
+              ].map(({ label, key, type, required }) => (
                 <div key={key} style={{ marginBottom: '14px' }}>
                   <label style={labelStyle}>{label}</label>
-                  <input type={type} required={required} placeholder={placeholder} value={form[key]}
+                  <input type={type} required={required} value={form[key]}
                     onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                     style={inputStyle}
                     onFocus={e => e.target.style.borderColor = 'var(--ink)'}
@@ -159,14 +169,25 @@ export default function Employees() {
                   />
                 </div>
               ))}
-              <div style={{ marginBottom: '14px' }}>
-                <label style={labelStyle}>Shift Start Time *</label>
-                <input type="time" required value={form.shift_start}
-                  onChange={e => setForm(f => ({ ...f, shift_start: e.target.value }))}
-                  style={inputStyle}
-                  onFocus={e => e.target.style.borderColor = 'var(--ink)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--line)'}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label style={labelStyle}>Shift Start *</label>
+                  <input type="time" required value={form.shift_start}
+                    onChange={e => setForm(f => ({ ...f, shift_start: e.target.value }))}
+                    style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Shift End *</label>
+                  <input type="time" required value={form.shift_end}
+                    onChange={e => setForm(f => ({ ...f, shift_end: e.target.value }))}
+                    style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
               </div>
               <div style={{ marginBottom: '20px' }}>
                 <label style={labelStyle}>Work Days *</label>

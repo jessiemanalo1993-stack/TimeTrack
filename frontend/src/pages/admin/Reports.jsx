@@ -164,7 +164,7 @@ export default function Reports() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr>{['Employee', 'Date', 'Day', 'Schedule', 'Time In', 'Location', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
+                  <tr>{['Employee', 'Date', 'Day', 'Schedule', 'Time In', 'Time Out', 'Location', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {preview.map(r => {
@@ -182,8 +182,12 @@ export default function Reports() {
                         </td>
                         <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px' }}>{r.date}</td>
                         <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{dayName}</td>
-                        <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{formatTime(r.employees?.shift_start)}</td>
+                        <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>
+                          {formatTime(r.employees?.shift_start)}
+                          {r.employees?.shift_end && <span> – {formatTime(r.employees.shift_end)}</span>}
+                        </td>
                         <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>{r.status === 'On Leave' ? 'N/A' : formatTime(r.time_in)}</td>
+                        <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{r.status === 'On Leave' ? 'N/A' : formatTime(r.time_out)}</td>
                         <td style={{ ...td, fontSize: '12px', color: 'var(--ink-2)' }}>{r.status === 'On Leave' ? 'N/A' : (r.work_location || '—')}</td>
                         <td style={td}><StatusBadge status={r.status} /></td>
                       </tr>

@@ -20,7 +20,7 @@ router.post('/send-report', authMiddleware, async (req, res) => {
   // 1. Fetch attendance records
   let attQuery = supabase
     .from('attendance')
-    .select('*, employees (id, name, email, shift_start)')
+    .select('*, employees (id, name, email, shift_start, shift_end)')
     .gte('date', from)
     .lte('date', to)
     .order('date', { ascending: true });
@@ -52,9 +52,10 @@ router.post('/send-report', authMiddleware, async (req, res) => {
 
   sheet.columns = [
     { header: 'Employee Name', key: 'name', width: 24 },
-    { header: 'Schedule', key: 'scheduled_start', width: 14 },
+    { header: 'Schedule', key: 'scheduled_start', width: 20 },
     { header: 'Status', key: 'status', width: 12 },
     { header: 'Login Time', key: 'time_in', width: 14 },
+    { header: 'Time Out', key: 'time_out', width: 14 },
     { header: 'Location', key: 'work_location', width: 18 },
     { header: 'Leave Type', key: 'leave_type', width: 18 },
   ];
@@ -76,11 +77,15 @@ router.post('/send-report', authMiddleware, async (req, res) => {
 
   records.forEach(record => {
     const emp = record.employees || {};
+    const scheduleLabel = emp.shift_start && emp.shift_end
+      ? `${formatTime12(emp.shift_start)} – ${formatTime12(emp.shift_end)}`
+      : formatTime12(emp.shift_start);
     const row = sheet.addRow({
       name: emp.name || '',
-      scheduled_start: formatTime12(emp.shift_start),
+      scheduled_start: scheduleLabel,
       status: record.status,
       time_in: formatTime12(record.time_in),
+      time_out: formatTime12(record.time_out),
       work_location: record.work_location || '—',
       leave_type: record.leave_type || '—',
     });
@@ -142,7 +147,7 @@ router.post('/send-report', authMiddleware, async (req, res) => {
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead>
           <tr style="background:#f9fafb;">
-            ${['Employee', 'Schedule', 'Login Time', 'Status', 'Location'].map(h =>
+            ${['Employee', 'Schedule', 'Login Time', 'Time Out', 'Status', 'Location'].map(h =>
               `<th style="padding:8px 10px;text-align:left;font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #e2e2e2;font-weight:500;">${h}</th>`
             ).join('')}
           </tr>
@@ -150,13 +155,17 @@ router.post('/send-report', authMiddleware, async (req, res) => {
         <tbody>
           ${records.map(r => {
             const emp = r.employees || {};
+            const scheduleLabel = emp.shift_start && emp.shift_end
+              ? `${formatTime12(emp.shift_start)} – ${formatTime12(emp.shift_end)}`
+              : formatTime12(emp.shift_start);
             const statusColor = { Present: '#16a34a', Late: '#d97706', Absent: '#dc2626', 'On Leave': '#4338ca' }[r.status] || '#555';
             const location = r.status === 'On Leave' ? (r.leave_type || 'On Leave') : (r.work_location || '—');
             return `
             <tr style="border-bottom:1px solid #f0f0f0;">
               <td style="padding:9px 10px;font-weight:500;color:#111;">${emp.name || ''}</td>
-              <td style="padding:9px 10px;color:#555;font-family:monospace;font-size:12px;">${formatTime12(emp.shift_start)}</td>
+              <td style="padding:9px 10px;color:#555;font-family:monospace;font-size:12px;">${scheduleLabel}</td>
               <td style="padding:9px 10px;color:#111;font-family:monospace;font-size:12px;">${formatTime12(r.time_in)}</td>
+              <td style="padding:9px 10px;color:#111;font-family:monospace;font-size:12px;">${formatTime12(r.time_out)}</td>
               <td style="padding:9px 10px;font-weight:600;color:${statusColor};">${r.status}</td>
               <td style="padding:9px 10px;color:#555;">${location}</td>
             </tr>`;

@@ -32,7 +32,7 @@ const locationBtnStyle = (selected) => ({
 const todayManila = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
 
 export default function EmployeeTimein() {
-  const [mode, setMode] = useState('timein'); // 'timein' | 'leave'
+  const [mode, setMode] = useState('timein'); // 'timein' | 'leave' | 'timeout'
 
   // Time-in state
   const [email, setEmail] = useState('');
@@ -51,12 +51,20 @@ export default function EmployeeTimein() {
   const [leaveResult, setLeaveResult] = useState(null);
   const [leaveError, setLeaveError] = useState('');
 
+  // Time-out state
+  const [timeoutEmail, setTimeoutEmail] = useState('');
+  const [timeoutLoading, setTimeoutLoading] = useState(false);
+  const [timeoutResult, setTimeoutResult] = useState(null);
+  const [timeoutError, setTimeoutError] = useState('');
+
   function switchMode(m) {
     setMode(m);
     setError('');
     setLeaveError('');
+    setTimeoutError('');
     setResult(null);
     setLeaveResult(null);
+    setTimeoutResult(null);
   }
 
   async function handleTimein(e) {
@@ -94,6 +102,21 @@ export default function EmployeeTimein() {
 
   const timeinDisabled = loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType);
   const leaveDisabled = leaveLoading || !leaveEmail || !leaveDate || !leaveRequestType;
+  const timeoutDisabled = timeoutLoading || !timeoutEmail;
+
+  async function handleTimeout(e) {
+    e.preventDefault();
+    setTimeoutError(''); setTimeoutResult(null); setTimeoutLoading(true);
+    try {
+      const data = await api.timeout(timeoutEmail.trim());
+      setTimeoutResult(data);
+      setTimeoutEmail('');
+    } catch (err) {
+      setTimeoutError(err.message);
+    } finally {
+      setTimeoutLoading(false);
+    }
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
@@ -111,15 +134,16 @@ export default function EmployeeTimein() {
           {/* Panel header */}
           <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '14px 20px', textAlign: 'center' }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)' }}>
-              {result ? 'Time-In Recorded' : leaveResult ? 'Leave Submitted' : 'This is a prototype'}
+              {result ? 'Time-In Recorded' : timeoutResult ? 'Time-Out Recorded' : leaveResult ? 'Leave Submitted' : 'This is a prototype'}
             </span>
           </div>
 
           {/* Mode toggle — only show when no result */}
-          {!result && !leaveResult && (
+          {!result && !leaveResult && !timeoutResult && (
             <div style={{ borderBottom: '1px solid var(--line)', padding: '12px 20px', display: 'flex', gap: '8px' }}>
               {[
                 { key: 'timein', label: 'Time In' },
+                { key: 'timeout', label: 'Time Out' },
                 { key: 'leave', label: 'File Leave' },
               ].map(({ key, label }) => {
                 const active = mode === key;
@@ -321,6 +345,64 @@ export default function EmployeeTimein() {
                   onMouseEnter={e => { e.target.style.borderColor = 'var(--ink)'; e.target.style.color = 'var(--ink)'; }}
                   onMouseLeave={e => { e.target.style.borderColor = 'var(--line)'; e.target.style.color = 'var(--ink-2)'; }}>
                   File another
+                </button>
+              </div>
+            )}
+
+            {/* ── TIME OUT form ── */}
+            {mode === 'timeout' && !timeoutResult && (
+              <form onSubmit={handleTimeout} className="animate-slide-down">
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Work Email</label>
+                  <input type="email" value={timeoutEmail} onChange={e => setTimeoutEmail(e.target.value)}
+                    placeholder="you@company.com" required autoFocus style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+
+                {timeoutError && (
+                  <div style={{ borderLeft: '2px solid var(--absent)', paddingLeft: '10px', marginBottom: '16px' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--absent)', margin: 0 }}>{timeoutError}</p>
+                  </div>
+                )}
+
+                <button type="submit" disabled={timeoutDisabled}
+                  style={{ width: '100%', padding: '11px', border: '1px solid var(--ink)', background: timeoutDisabled ? 'var(--line)' : 'var(--ink)', color: timeoutDisabled ? 'var(--ink-3)' : 'var(--bg)', fontSize: '13px', fontWeight: '600', cursor: timeoutDisabled ? 'not-allowed' : 'pointer', borderRadius: '2px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', transition: 'all 0.15s' }}>
+                  {timeoutLoading ? 'Recording...' : 'Time Out →'}
+                </button>
+              </form>
+            )}
+
+            {/* ── TIME OUT result ── */}
+            {mode === 'timeout' && timeoutResult && (
+              <div className="animate-fade-up">
+                <div style={{ borderLeft: '3px solid var(--ink)', paddingLeft: '14px', marginBottom: '24px' }}>
+                  <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>{timeoutResult.name}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>{timeoutResult.email}</p>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <StatusBadge status={timeoutResult.status} />
+                </div>
+                <div style={{ borderTop: '1px solid var(--line-2)' }}>
+                  {[
+                    { label: 'Time In', value: timeoutResult.time_in_formatted, mono: true },
+                    { label: 'Time Out', value: timeoutResult.time_out_formatted, mono: true },
+                    { label: 'Scheduled Start', value: timeoutResult.scheduled_start_formatted, mono: true },
+                    { label: 'Scheduled End', value: timeoutResult.scheduled_end_formatted, mono: true },
+                    { label: 'Date', value: timeoutResult.date, mono: true },
+                  ].map(({ label, value, mono }) => (
+                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--line-2)' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--ink-3)' }}>{label}</span>
+                      <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--ink)', fontFamily: mono ? 'var(--mono)' : 'var(--font)' }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => setTimeoutResult(null)}
+                  style={{ marginTop: '20px', width: '100%', padding: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink-2)', fontSize: '13px', cursor: 'pointer', borderRadius: '2px', fontFamily: 'var(--font)', transition: 'border-color 0.15s, color 0.15s' }}
+                  onMouseEnter={e => { e.target.style.borderColor = 'var(--ink)'; e.target.style.color = 'var(--ink)'; }}
+                  onMouseLeave={e => { e.target.style.borderColor = 'var(--line)'; e.target.style.color = 'var(--ink-2)'; }}>
+                  Record another
                 </button>
               </div>
             )}

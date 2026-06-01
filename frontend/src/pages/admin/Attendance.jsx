@@ -116,7 +116,7 @@ export default function Attendance() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr>{['Employee', 'Schedule', 'Time In', 'Location', 'Status', 'Notes', ''].map((h, i) => <th key={i} style={th}>{h}</th>)}</tr>
+                <tr>{['Employee', 'Schedule', 'Time In', 'Time Out', 'Location', 'Status', 'Notes', ''].map((h, i) => <th key={i} style={th}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {records.map(r => (
@@ -128,8 +128,12 @@ export default function Attendance() {
                     <td style={td}>
                       <p style={{ margin: '0 0 1px', fontWeight: '500' }}>{r.employees?.name}</p>
                     </td>
-                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{formatTime(r.employees?.shift_start)}</td>
+                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>
+                      {formatTime(r.employees?.shift_start)}
+                      {r.employees?.shift_end && <span> – {formatTime(r.employees.shift_end)}</span>}
+                    </td>
                     <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>{r.status === 'On Leave' ? 'N/A' : formatTime(r.time_in)}</td>
+                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{r.status === 'On Leave' ? 'N/A' : (formatTime(r.time_out))}</td>
                     <td style={{ ...td, fontSize: '12px', color: 'var(--ink-2)' }}>{r.status === 'On Leave' ? 'N/A' : (r.work_location || '—')}</td>
                     <td style={td}><StatusBadge status={r.status} /></td>
                     <td style={{ ...td, fontSize: '12px', color: 'var(--ink-3)', maxWidth: '160px' }}>

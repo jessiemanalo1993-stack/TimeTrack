@@ -47,6 +47,7 @@ export const api = {
 
   // Attendance
   timein: (email, work_location, leave_type) => request('POST', '/api/attendance/timein', { email, work_location, leave_type }),
+  timeout: (email) => request('POST', '/api/attendance/timeout', { email }),
   getAttendance: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request('GET', `/api/attendance${qs ? '?' + qs : ''}`, null, true);
