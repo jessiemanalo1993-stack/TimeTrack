@@ -46,8 +46,8 @@ export const api = {
   deleteEmployee: (id) => request('DELETE', `/api/employees/${id}`, null, true),
 
   // Attendance
-  timein: (email, work_location, leave_type) => request('POST', '/api/attendance/timein', { email, work_location, leave_type }),
-  timeout: (email) => request('POST', '/api/attendance/timeout', { email }),
+  timein: (email, password, work_location, leave_type) => request('POST', '/api/attendance/timein', { email, password, work_location, leave_type }),
+  timeout: (email, password) => request('POST', '/api/attendance/timeout', { email, password }),
   getAttendance: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request('GET', `/api/attendance${qs ? '?' + qs : ''}`, null, true);
@@ -73,4 +73,7 @@ export const api = {
   },
   approveLeave: (id) => request('PUT', `/api/leave/${id}/approve`, null, true),
   rejectLeave: (id) => request('PUT', `/api/leave/${id}/reject`, null, true),
+
+  // Employee password (self-service)
+  setPassword: (data) => request('POST', '/api/employees/set-password', data),
 };

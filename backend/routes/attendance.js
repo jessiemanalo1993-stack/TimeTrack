@@ -1,13 +1,15 @@
 const router = require('express').Router();
 const ExcelJS = require('exceljs');
+const bcrypt = require('bcryptjs');
 const supabase = require('../supabase');
 const authMiddleware = require('../middleware/auth');
 const { todayLocal, yesterdayLocal, timeLocal, dayNameLocal, nowLocal, toMinutes, formatTime12, getShiftWindow } = require('../utils/time');
 
 // POST /api/attendance/timein — public (no auth)
 router.post('/timein', async (req, res) => {
-  const { email, work_location, leave_type } = req.body;
+  const { email, password, work_location, leave_type } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
+  if (!password) return res.status(400).json({ error: 'Password is required' });
 
   const isOnLeave = work_location === 'On Leave';
 
@@ -26,6 +28,16 @@ router.post('/timein', async (req, res) => {
 
   if (empError || !employee) {
     return res.status(404).json({ error: 'No employee found with that email address' });
+  }
+
+  // Password check
+  if (employee.password_hash) {
+    const match = await bcrypt.compare(password, employee.password_hash);
+    if (!match) return res.status(401).json({ error: 'Incorrect password' });
+  } else {
+    // First use — set their password
+    const hash = await bcrypt.hash(password, 10);
+    await supabase.from('employees').update({ password_hash: hash }).eq('id', employee.id);
   }
 
   const dayName = dayNameLocal();
@@ -125,17 +137,27 @@ router.post('/timein', async (req, res) => {
 
 // POST /api/attendance/timeout — public (no auth)
 router.post('/timeout', async (req, res) => {
-  const { email } = req.body;
+  const { email, password } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
+  if (!password) return res.status(400).json({ error: 'Password is required' });
 
   const { data: employee, error: empError } = await supabase
     .from('employees')
-    .select('id, name, email, shift_start, shift_end')
+    .select('id, name, email, shift_start, shift_end, password_hash')
     .eq('email', email.toLowerCase().trim())
     .single();
 
   if (empError || !employee) {
     return res.status(404).json({ error: 'No employee found with that email address' });
+  }
+
+  // Password check
+  if (employee.password_hash) {
+    const match = await bcrypt.compare(password, employee.password_hash);
+    if (!match) return res.status(401).json({ error: 'Incorrect password' });
+  } else {
+    const hash = await bcrypt.hash(password, 10);
+    await supabase.from('employees').update({ password_hash: hash }).eq('id', employee.id);
   }
 
   const todayStr = todayLocal();

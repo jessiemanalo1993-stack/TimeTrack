@@ -1,6 +1,47 @@
 const router = require('express').Router();
+const bcrypt = require('bcryptjs');
 const supabase = require('../supabase');
 const authMiddleware = require('../middleware/auth');
+
+// POST /api/employees/set-password — public, employee sets or changes their own password
+router.post('/set-password', async (req, res) => {
+  const { email, current_password, new_password } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+  if (!new_password || new_password.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  }
+
+  const { data: employee, error: empError } = await supabase
+    .from('employees')
+    .select('id, name, email, password_hash')
+    .eq('email', email.toLowerCase().trim())
+    .single();
+
+  if (empError || !employee) {
+    return res.status(404).json({ error: 'No employee found with that email address' });
+  }
+
+  if (employee.password_hash) {
+    if (!current_password) {
+      return res.status(400).json({ error: 'Current password is required to change password' });
+    }
+    const match = await bcrypt.compare(current_password, employee.password_hash);
+    if (!match) return res.status(401).json({ error: 'Current password is incorrect' });
+  }
+
+  const hash = await bcrypt.hash(new_password, 10);
+  const { error: updateError } = await supabase
+    .from('employees')
+    .update({ password_hash: hash })
+    .eq('id', employee.id);
+
+  if (updateError) {
+    console.error('Set password error:', updateError);
+    return res.status(500).json({ error: 'Failed to update password' });
+  }
+
+  res.json({ success: true, name: employee.name });
+});
 
 router.use(authMiddleware);
 
@@ -19,16 +60,20 @@ router.get('/', async (req, res) => {
 
 // POST /api/employees — create
 router.post('/', async (req, res) => {
-  const { name, email, shift_start, shift_end, work_days } = req.body;
+  const { name, email, shift_start, shift_end, work_days, password } = req.body;
   if (!name || !email || !shift_start || !shift_end || !work_days?.length) {
     return res.status(400).json({ error: 'name, email, shift_start, shift_end, and work_days are required' });
+  }
+  if (!password || password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Invalid email format' });
   }
+  const password_hash = await bcrypt.hash(password, 10);
   const { data, error } = await supabase
     .from('employees')
-    .insert({ name: name.trim(), email: email.toLowerCase().trim(), shift_start, shift_end, work_days })
+    .insert({ name: name.trim(), email: email.toLowerCase().trim(), shift_start, shift_end, work_days, password_hash })
     .select()
     .single();
   if (error) {
@@ -41,7 +86,7 @@ router.post('/', async (req, res) => {
 
 // PUT /api/employees/:id — update
 router.put('/:id', async (req, res) => {
-  const { name, email, shift_start, shift_end, work_days } = req.body;
+  const { name, email, shift_start, shift_end, work_days, password } = req.body;
   const updates = {};
   if (name) updates.name = name.trim();
   if (email) {
@@ -53,6 +98,10 @@ router.put('/:id', async (req, res) => {
   if (shift_start) updates.shift_start = shift_start;
   if (shift_end) updates.shift_end = shift_end;
   if (work_days) updates.work_days = work_days;
+  if (password) {
+    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    updates.password_hash = await bcrypt.hash(password, 10);
+  }
 
   const { data, error } = await supabase
     .from('employees')
