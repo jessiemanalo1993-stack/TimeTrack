@@ -23,7 +23,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
   const { data: manager, error } = await supabase
     .from('managers')
-    .select('id, name, username, password_hash')
+    .select('id, name, username, password_hash, temp_password_expires')
     .eq('username', username.trim().toLowerCase())
     .single();
 
@@ -34,8 +34,11 @@ router.post('/login', loginLimiter, async (req, res) => {
   const valid = await bcrypt.compare(password, manager.password_hash);
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
+  if (manager.temp_password_expires && new Date() > new Date(manager.temp_password_expires)) {
+    return res.status(401).json({ error: 'Your temporary password has expired. Please contact the admin to reset your access.' });
+  }
   const token = jwt.sign(
-    { role: 'admin', manager_id: manager.id, name: manager.name, username: manager.username },
+    { role: 'admin', manager_id: manager.id, name: manager.name, username: manager.username, must_change_password: !!manager.temp_password_expires },
     process.env.JWT_SECRET,
     { expiresIn: '8h' }
   );
@@ -111,6 +114,33 @@ router.post('/verify-password', authMiddleware, loginLimiter, async (req, res) =
   if (!valid) return res.status(401).json({ error: 'Incorrect password' });
 
   res.json({ verified: true });
+});
+
+// POST /api/auth/change-password — manager changes their own password (clears temp expiry)
+router.post('/change-password', authMiddleware, async (req, res) => {
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password) {
+    return res.status(400).json({ error: 'Current and new password are required' });
+  }
+  if (new_password.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  }
+
+  const { data: manager, error } = await supabase
+    .from('managers')
+    .select('password_hash')
+    .eq('id', req.user.manager_id)
+    .single();
+
+  if (error || !manager) return res.status(404).json({ error: 'Manager not found' });
+
+  const valid = await bcrypt.compare(current_password, manager.password_hash);
+  if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
+
+  const password_hash = await bcrypt.hash(new_password, 10);
+  await supabase.from('managers').update({ password_hash, temp_password_expires: null }).eq('id', req.user.manager_id);
+
+  res.json({ success: true });
 });
 
 // POST /api/auth/request-reset — public, send OTP to employee email
@@ -264,10 +294,6 @@ router.post('/manager-requests/:id/approve', authMiddleware, async (req, res) =>
   if (req.user.username !== 'admin') {
     return res.status(403).json({ error: 'Only the admin account can approve requests' });
   }
-  const { password } = req.body;
-  if (!password || password.length < 6) {
-    return res.status(400).json({ error: 'Initial password (min 6 characters) is required' });
-  }
 
   const { data: request, error: reqErr } = await supabase
     .from('manager_requests')
@@ -278,10 +304,15 @@ router.post('/manager-requests/:id/approve', authMiddleware, async (req, res) =>
   if (reqErr || !request) return res.status(404).json({ error: 'Request not found' });
   if (request.status !== 'Pending') return res.status(400).json({ error: 'Request already processed' });
 
-  const password_hash = await bcrypt.hash(password, 10);
+  // Generate a random 12-char temp password
+  const tempPassword = Math.random().toString(36).slice(2, 8).toUpperCase() +
+    Math.random().toString(36).slice(2, 8) + Math.floor(Math.random() * 90 + 10);
+  const password_hash = await bcrypt.hash(tempPassword, 10);
+  const temp_password_expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
   const { error: insertErr } = await supabase
     .from('managers')
-    .insert({ name: request.name, username: request.username, password_hash });
+    .insert({ name: request.name, username: request.username, password_hash, temp_password_expires });
 
   if (insertErr) {
     if (insertErr.code === '23505') return res.status(409).json({ error: 'Username already exists as a manager' });
@@ -289,6 +320,49 @@ router.post('/manager-requests/:id/approve', authMiddleware, async (req, res) =>
   }
 
   await supabase.from('manager_requests').update({ status: 'Approved' }).eq('id', request.id);
+
+  // Send temp password email
+  const loginUrl = process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/admin/login` : 'the manager login page';
+  try {
+    await axios.post('https://api.brevo.com/v3/smtp/email', {
+      sender: { name: process.env.BREVO_FROM_NAME, email: process.env.BREVO_FROM_EMAIL },
+      to: [{ name: request.name, email: request.username }],
+      subject: 'TimeTrack — Your Manager Access Has Been Approved',
+      htmlContent: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#f9f9f9;">
+          <h2 style="font-size:20px;font-weight:700;margin:0 0 6px;color:#111;">TimeTrack</h2>
+          <p style="font-size:13px;color:#666;margin:0 0 28px;">Manager Access Approved</p>
+
+          <p style="font-size:14px;color:#333;margin:0 0 8px;">Hi <strong>${request.name}</strong>,</p>
+          <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 24px;">
+            Your request for manager access has been approved. Use the temporary password below to sign in.
+          </p>
+
+          <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:20px 24px;margin-bottom:24px;text-align:center;">
+            <p style="font-size:11px;color:#999;margin:0 0 8px;letter-spacing:0.1em;text-transform:uppercase;">Temporary Password</p>
+            <p style="font-size:28px;font-weight:700;letter-spacing:0.12em;color:#111;margin:0;font-family:monospace;">${tempPassword}</p>
+            <p style="font-size:12px;color:#e53935;margin:10px 0 0;font-weight:600;">Valid for 24 hours only</p>
+          </div>
+
+          <div style="background:#fff8e1;border-left:3px solid #f59e0b;padding:14px 18px;border-radius:4px;margin-bottom:24px;">
+            <p style="font-size:13px;color:#92400e;margin:0;line-height:1.6;">
+              <strong>Important:</strong> After signing in, please go to your profile and set your own permanent password immediately. Your temporary password will expire after 24 hours.
+            </p>
+          </div>
+
+          <p style="font-size:13px;color:#555;margin:0 0 8px;">Sign in at:</p>
+          <a href="${loginUrl}" style="font-size:13px;color:#7c3aed;">${loginUrl}</a>
+
+          <p style="font-size:11px;color:#aaa;margin:28px 0 0;">If you did not request manager access, please ignore this email.</p>
+        </div>
+      `,
+    }, {
+      headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error('Approval email error:', err.response?.data || err.message);
+  }
+
   res.json({ success: true });
 });
 

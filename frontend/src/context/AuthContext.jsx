@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
   const payload = token ? parseToken(token) : {};
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, login, logout, username: payload.username || '', managerName: payload.name || '' }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, login, logout, username: payload.username || '', managerName: payload.name || '', mustChangePassword: !!payload.must_change_password }}>
       {children}
     </AuthContext.Provider>
   );

@@ -33,8 +33,8 @@ export default function Managers() {
   async function handleApprove(e) {
     e.preventDefault(); setApproving(true); setApproveError('');
     try {
-      await api.approveManagerRequest(approveModal.id, approvePassword);
-      setApproveModal(null); setApprovePassword('');
+      await api.approveManagerRequest(approveModal.id);
+      setApproveModal(null);
       load(); loadRequests();
     } catch (err) { setApproveError(err.message); }
     finally { setApproving(false); }
@@ -206,18 +206,14 @@ export default function Managers() {
             </div>
             <form onSubmit={handleApprove} style={{ padding: '22px' }}>
               <p style={{ fontSize: '15px', color: 'var(--ink)', marginBottom: '2px', fontWeight: '600' }}>{approveModal.name}</p>
-              <p style={{ fontSize: '12px', color: 'var(--ink-3)', marginBottom: '18px', fontFamily: 'var(--mono)' }}>@{approveModal.username}</p>
-              <div style={{ marginBottom: '20px' }}>
-                <label className="field-label">Set Initial Password *</label>
-                <input type="password" required minLength={6} value={approvePassword}
-                  onChange={e => { setApprovePassword(e.target.value); setApproveError(''); }}
-                  placeholder="Min. 6 characters" autoFocus className="dark-input" />
-                <p style={{ fontSize: '11px', color: 'var(--ink-3)', marginTop: '6px' }}>The new manager will use this password to sign in.</p>
-              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-3)', marginBottom: '18px', fontFamily: 'var(--mono)' }}>{approveModal.username}</p>
+              <p style={{ fontSize: '12px', color: 'var(--ink-2)', lineHeight: 1.6, marginBottom: '20px' }}>
+                A temporary password will be generated and sent to <strong>{approveModal.username}</strong>. It will be valid for 24 hours.
+              </p>
               {approveError && <div className="msg-error" style={{ marginBottom: '14px' }}><p>{approveError}</p></div>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <button type="button" onClick={() => setApproveModal(null)} className="btn-ghost">Cancel</button>
-                <button type="submit" disabled={approving} className="btn-primary">{approving ? 'Approving…' : 'Approve'}</button>
+                <button type="submit" disabled={approving} className="btn-primary">{approving ? 'Approving…' : 'Approve & Send'}</button>
               </div>
             </form>
           </div>
