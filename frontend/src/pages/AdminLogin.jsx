@@ -43,7 +43,7 @@ export default function AdminLogin() {
     <div style={{ minHeight: '100vh', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div style={{ width: '100%', maxWidth: '360px' }}>
 
-        <div style={{ marginBottom: '36px', textAlign: 'center' }}>
+        <div className="animate-fade-down" style={{ marginBottom: '36px', textAlign: 'center' }}>
           <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '6px' }}>
             Manager Panel
           </p>
@@ -52,7 +52,7 @@ export default function AdminLogin() {
           </h1>
         </div>
 
-        <div style={{ border: '1px solid var(--line)', background: 'var(--bg)', borderRadius: '2px' }}>
+        <div className="animate-rotate-in" style={{ border: '1px solid var(--line)', background: 'var(--bg)', borderRadius: '2px' }}>
           <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '14px 20px' }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>
               Sign In
@@ -120,7 +120,7 @@ export default function AdminLogin() {
           </form>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: '11px', color: 'var(--ink-3)', marginTop: '20px', fontFamily: 'var(--mono)' }}>
+        <p className="animate-fade-up" style={{ textAlign: 'center', fontSize: '11px', color: 'var(--ink-3)', marginTop: '20px', fontFamily: 'var(--mono)', animationDelay: '0.4s' }}>
           <a href="/" style={{ color: 'var(--ink-2)', textDecoration: 'underline' }}>
             ← Employee Time-In
           </a>
