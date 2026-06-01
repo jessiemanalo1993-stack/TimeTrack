@@ -46,14 +46,14 @@ export default function EmployeeTimein() {
       <div style={{ width: '100%', maxWidth: '400px' }}>
 
         {/* Wordmark */}
-        <div style={{ marginBottom: '40px', textAlign: 'center' }}>
+        <div className="animate-fade-down" style={{ marginBottom: '40px', textAlign: 'center' }}>
           <h1 style={{ fontFamily: 'var(--mono)', fontSize: '22px', fontWeight: '500', color: 'var(--ink)', letterSpacing: '0.04em', margin: 0 }}>
             TimeTrack
           </h1>
         </div>
 
         {/* Panel */}
-        <div style={{ border: '1px solid var(--line)', background: 'var(--bg)', borderRadius: '2px' }}>
+        <div className="animate-rotate-in" style={{ border: '1px solid var(--line)', background: 'var(--bg)', borderRadius: '2px' }}>
           {/* Panel header rule */}
           <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '14px 20px', textAlign: 'center' }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)' }}>
@@ -63,7 +63,7 @@ export default function EmployeeTimein() {
 
           <div style={{ padding: '24px 20px' }}>
             {result ? (
-              <div>
+              <div className="animate-fade-up">
                 {/* Status indicator */}
                 <div style={{
                   borderLeft: `3px solid ${result.status === 'Present' ? 'var(--present)' : 'var(--late)'}`,
@@ -176,7 +176,7 @@ export default function EmployeeTimein() {
                 </div>
 
                 {workLocation === 'On Leave' && (
-                  <div style={{ marginBottom: '20px' }}>
+                  <div className="animate-slide-down" style={{ marginBottom: '20px' }}>
                     <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '8px' }}>
                       Leave Type
                     </label>
@@ -242,7 +242,7 @@ export default function EmployeeTimein() {
           </div>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: '11px', color: 'var(--ink-3)', marginTop: '20px', fontFamily: 'var(--mono)' }}>
+        <p className="animate-fade-up" style={{ textAlign: 'center', fontSize: '11px', color: 'var(--ink-3)', marginTop: '20px', fontFamily: 'var(--mono)', animationDelay: '0.4s' }}>
           Admin?{' '}
           <a href="/admin/login" style={{ color: 'var(--ink-2)', textDecoration: 'underline' }}>
             Sign in to admin panel

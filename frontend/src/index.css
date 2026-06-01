@@ -34,3 +34,26 @@ body {
 input, select, textarea {
   font-family: var(--font);
 }
+
+/* ── Animations ─────────────────────────────── */
+@keyframes rotateIn {
+  from { opacity: 0; transform: perspective(800px) rotateY(-90deg) scale(0.9); }
+  to   { opacity: 1; transform: perspective(800px) rotateY(0deg) scale(1); }
+}
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-rotate-in    { animation: rotateIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.animate-fade-down    { animation: fadeSlideDown 0.4s ease both; }
+.animate-fade-up      { animation: fadeSlideUp 0.4s ease both; }
+.animate-slide-down   { animation: slideDown 0.25s ease both; }
