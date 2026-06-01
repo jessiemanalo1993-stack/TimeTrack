@@ -64,6 +64,10 @@ input, select, textarea { font-family: var(--font); }
   from { opacity: 0; transform: scale(0.95); }
   to   { opacity: 1; transform: scale(1); }
 }
+@keyframes rotateIn {
+  from { opacity: 0; transform: perspective(600px) rotateY(-90deg) scale(0.9); }
+  to   { opacity: 1; transform: perspective(600px) rotateY(0deg) scale(1); }
+}
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -76,6 +80,7 @@ input, select, textarea { font-family: var(--font); }
 .animate-fade-in   { animation: fadeIn 0.35s ease forwards; }
 .animate-slide-down { animation: slideDown 0.25s ease forwards; }
 .animate-scale-in  { animation: scaleIn 0.25s ease forwards; }
+.animate-rotate-in { animation: rotateIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
 
 .skeleton {
   background: linear-gradient(90deg, var(--bg-3) 25%, var(--line-2) 50%, var(--bg-3) 75%);

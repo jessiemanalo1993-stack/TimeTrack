@@ -47,7 +47,7 @@ export default function AdminLogin() {
         </div>
 
         {/* Card */}
-        <div style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+        <div className="animate-rotate-in" style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
           <div style={{ height: '4px', background: 'linear-gradient(90deg, var(--sap-blue), #00A3FF)' }} />
           <div style={{ padding: '28px' }}>
             <form onSubmit={handleSubmit}>

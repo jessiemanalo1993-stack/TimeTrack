@@ -48,7 +48,7 @@ export default function EmployeeTimein() {
         </div>
 
         {/* Card */}
-        <div style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
+        <div className="animate-rotate-in" style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
 
           {/* Card top accent */}
           <div style={{ height: '4px', background: 'linear-gradient(90deg, var(--sap-blue), #00A3FF)' }} />
