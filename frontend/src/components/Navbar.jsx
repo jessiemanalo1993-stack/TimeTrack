@@ -8,6 +8,7 @@ const navLinks = [
   { to: '/admin/attendance',  label: 'Attendance' },
   { to: '/admin/leave',       label: 'Leave' },
   { to: '/admin/reports',     label: 'Reports' },
+  { to: '/admin/managers',    label: 'Managers' },
 ];
 
 export default function Navbar() {

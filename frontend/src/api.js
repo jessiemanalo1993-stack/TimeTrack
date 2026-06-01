@@ -38,6 +38,9 @@ export const api = {
   // Auth
   login: (username, password) =>
     request('POST', '/api/auth/login', { username, password }),
+  getManagers: () => request('GET', '/api/auth/managers', null, true),
+  createManager: (data) => request('POST', '/api/auth/managers', data, true),
+  deleteManager: (id) => request('DELETE', `/api/auth/managers/${id}`, null, true),
   employeeLogin: (email, password) =>
     request('POST', '/api/auth/employee-login', { email, password }),
   requestPasswordReset: (email) =>

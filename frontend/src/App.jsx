@@ -11,6 +11,7 @@ import Employees from './pages/admin/Employees';
 import Attendance from './pages/admin/Attendance';
 import Reports from './pages/admin/Reports';
 import LeaveRequests from './pages/admin/LeaveRequests';
+import Managers from './pages/admin/Managers';
 
 function TitleManager() {
   const { pathname } = useLocation();
@@ -61,6 +62,11 @@ export default function App() {
           <Route path="/admin/leave" element={
             <ProtectedRoute>
               <AdminLayout><LeaveRequests /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/managers" element={
+            <ProtectedRoute>
+              <AdminLayout><Managers /></AdminLayout>
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />

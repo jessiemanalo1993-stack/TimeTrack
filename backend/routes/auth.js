@@ -1,9 +1,11 @@
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
+const axios = require('axios');
 const rateLimit = require('express-rate-limit');
+const supabase = require('../supabase');
+const authMiddleware = require('../middleware/auth');
 
-// Strict rate limit on login — 10 attempts per 15 min per IP
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -12,33 +14,100 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-function timingSafeCompare(a, b) {
-  try {
-    return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
-  } catch {
-    return false;
-  }
-}
-
-router.post('/login', loginLimiter, (req, res) => {
+// POST /api/auth/login — manager login against DB
+router.post('/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
   }
 
-  const validUser = timingSafeCompare(username, process.env.ADMIN_USERNAME || '');
-  const validPass = timingSafeCompare(password, process.env.ADMIN_PASSWORD || '');
+  const { data: manager, error } = await supabase
+    .from('managers')
+    .select('id, name, username, password_hash')
+    .eq('username', username.trim().toLowerCase())
+    .single();
 
-  if (!validUser || !validPass) {
+  if (error || !manager) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-  const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '8h' });
+  const valid = await bcrypt.compare(password, manager.password_hash);
+  if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+
+  const token = jwt.sign(
+    { role: 'admin', manager_id: manager.id, name: manager.name },
+    process.env.JWT_SECRET,
+    { expiresIn: '8h' }
+  );
   res.json({ token });
 });
 
+// GET /api/auth/managers — list all managers
+router.get('/managers', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase
+    .from('managers')
+    .select('id, name, username, created_at')
+    .order('created_at', { ascending: true });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// POST /api/auth/managers — create a new manager
+router.post('/managers', authMiddleware, async (req, res) => {
+  const { name, username, password } = req.body;
+  if (!name || !username || !password) {
+    return res.status(400).json({ error: 'Name, username, and password are required' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+
+  const password_hash = await bcrypt.hash(password, 10);
+  const { data, error } = await supabase
+    .from('managers')
+    .insert({ name: name.trim(), username: username.trim().toLowerCase(), password_hash })
+    .select('id, name, username, created_at')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') return res.status(409).json({ error: 'Username already taken' });
+    return res.status(500).json({ error: error.message });
+  }
+  res.status(201).json(data);
+});
+
+// DELETE /api/auth/managers/:id — delete a manager (cannot delete yourself)
+router.delete('/managers/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  if (String(req.user.manager_id) === String(id)) {
+    return res.status(400).json({ error: 'You cannot delete your own account' });
+  }
+
+  const { error } = await supabase.from('managers').delete().eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
+
+// POST /api/auth/verify-password — confirm current manager's password
+router.post('/verify-password', authMiddleware, loginLimiter, async (req, res) => {
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: 'Password is required' });
+
+  const { data: manager, error } = await supabase
+    .from('managers')
+    .select('password_hash')
+    .eq('id', req.user.manager_id)
+    .single();
+
+  if (error || !manager) return res.status(401).json({ error: 'Manager not found' });
+
+  const valid = await bcrypt.compare(password, manager.password_hash);
+  if (!valid) return res.status(401).json({ error: 'Incorrect password' });
+
+  res.json({ verified: true });
+});
+
 // POST /api/auth/request-reset — public, send OTP to employee email
-const axios = require('axios');
 router.post('/request-reset', loginLimiter, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -49,10 +118,7 @@ router.post('/request-reset', loginLimiter, async (req, res) => {
     .eq('email', email.toLowerCase().trim())
     .single();
 
-  // Always return success to avoid email enumeration
-  if (empError || !employee) {
-    return res.json({ success: true });
-  }
+  if (empError || !employee) return res.json({ success: true });
 
   const otp = String(Math.floor(100000 + Math.random() * 900000));
   const otpHash = await bcrypt.hash(otp, 10);
@@ -127,8 +193,8 @@ router.post('/reset-password', loginLimiter, async (req, res) => {
 
   res.json({ success: true, name: employee.name });
 });
-const bcrypt = require('bcryptjs');
-const supabase = require('../supabase');
+
+// POST /api/auth/employee-login — employee portal login
 router.post('/employee-login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
@@ -147,22 +213,11 @@ router.post('/employee-login', loginLimiter, async (req, res) => {
     const match = await bcrypt.compare(password, employee.password_hash);
     if (!match) return res.status(401).json({ error: 'Incorrect password' });
   } else {
-    // First use — set password
     const hash = await bcrypt.hash(password, 10);
     await supabase.from('employees').update({ password_hash: hash }).eq('id', employee.id);
   }
 
   res.json({ name: employee.name, email: employee.email });
-});
-const authMiddleware = require('../middleware/auth');
-router.post('/verify-password', authMiddleware, loginLimiter, (req, res) => {
-  const { password } = req.body;
-  if (!password) return res.status(400).json({ error: 'Password is required' });
-
-  const valid = timingSafeCompare(password, process.env.ADMIN_PASSWORD || '');
-  if (!valid) return res.status(401).json({ error: 'Incorrect password' });
-
-  res.json({ verified: true });
 });
 
 module.exports = router;
