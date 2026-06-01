@@ -365,6 +365,62 @@ input, select, textarea, button { font-family: var(--font); }
   clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
 }
 
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  /* Page padding */
+  .page-wrap { padding: 20px 12px !important; }
+
+  /* Modals: full-screen on mobile */
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .modal-box {
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 92vh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Tables: horizontal scroll container */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .dark-table { min-width: 560px; }
+
+  /* Stat cards: 2-col on mobile */
+  .stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+
+  /* Tabs: allow wrapping */
+  .tab-group { flex-wrap: wrap; gap: 3px; }
+  .tab-btn   { padding: 6px 10px; font-size: 9px; }
+
+  /* Option buttons */
+  .option-btn { padding: 9px 6px; font-size: 10px; }
+
+  /* Filter rows */
+  .filter-row { flex-direction: column !important; align-items: stretch !important; }
+  .filter-row > div { width: 100%; }
+  .filter-row select,
+  .filter-row input[type="date"] { width: 100%; }
+
+  /* Reports email row */
+  .email-row { flex-direction: column !important; align-items: stretch !important; }
+  .email-row > * { width: 100% !important; min-width: unset !important; }
+
+  /* Panel header text */
+  .panel-header { padding: 12px 14px; }
+
+  /* Prevent iOS zoom on focus (inputs need font-size >= 16px to avoid zoom) */
+  .dark-input,
+  select,
+  input[type="date"],
+  input[type="time"] {
+    font-size: 16px !important;
+  }
+
+  /* Page titles */
+  h1 { font-size: 18px !important; }
+}
+
 /* ── Shimmer loading ── */
 @keyframes shimmer {
   0%   { background-position: -200% center; }

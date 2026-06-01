@@ -61,7 +61,7 @@ export default function EmployeeLogin() {
   const modeLabel = { login: 'Employee Sign In', request: 'Reset Password', verify: 'Enter Reset Code' };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative' }}>
       <div className="bg-glow" />
       <div style={{ width: '100%', maxWidth: '360px', position: 'relative', zIndex: 1 }}>
 

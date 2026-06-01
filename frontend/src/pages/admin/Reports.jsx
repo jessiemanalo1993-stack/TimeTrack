@@ -79,7 +79,7 @@ export default function Reports() {
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }} className="page-wrap">
 
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
@@ -94,7 +94,7 @@ export default function Reports() {
           <span className="panel-title">Filters</span>
         </div>
         <form onSubmit={handleSearch} style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end', marginBottom: '16px' }} className="filter-row">
             {[
               { label: 'From', value: dateFrom, set: setDateFrom },
               { label: 'To', value: dateTo, set: setDateTo },
@@ -133,8 +133,8 @@ export default function Reports() {
 
       {/* Summary stats */}
       {searched && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}
-          className="sm:grid-cols-5">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '20px' }}
+          className="stat-grid">
           {[
             { label: 'Total', value: preview.length, color: 'var(--ink)', accent: 'var(--accent)' },
             { label: 'Present', value: counts.Present, color: 'var(--present)', accent: 'var(--present)' },
@@ -164,7 +164,7 @@ export default function Reports() {
           ) : preview.length === 0 ? (
             <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>No records found for the selected range.</p>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflowX: 'auto' }} className="table-scroll">
               <table className="dark-table">
                 <thead>
                   <tr>{['Employee', 'Date', 'Day', 'Schedule', 'Time In', 'Time Out', 'Location', 'Status'].map(h => <th key={h}>{h}</th>)}</tr>
@@ -215,7 +215,7 @@ export default function Reports() {
             <p style={{ margin: '0 0 16px', fontSize: '12px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', lineHeight: 1.6 }}>
               Send the Excel report by email. Leave recipient blank to send to all employees.
             </p>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '16px' }} className="email-row">
               <div>
                 <label className="field-label">Recipient</label>
                 <select value={emailRecipient} onChange={e => setEmailRecipient(e.target.value)} style={{ ...selectStyle, minWidth: '180px' }}

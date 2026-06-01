@@ -97,27 +97,30 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="sm:hidden" style={{ borderTop: '1px solid var(--line)', background: 'var(--base-2)', padding: '8px' }}>
+        <div className="sm:hidden animate-slide-down" style={{ borderTop: '1px solid var(--line)', background: 'var(--base-2)', padding: '8px 12px 12px' }}>
           {navLinks.map(({ to, label }) => {
             const active = pathname === to;
             return (
               <Link key={to} to={to} onClick={() => setMenuOpen(false)} style={{
-                display: 'block', padding: '12px 16px', fontSize: '12px',
-                fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase',
-                color: active ? 'var(--accent)' : 'var(--ink-2)',
+                display: 'flex', alignItems: 'center', padding: '13px 12px',
+                fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: active ? 'var(--accent)' : 'var(--ink-2)',
                 background: active ? 'var(--accent-dim)' : 'transparent',
-                borderRadius: '8px', marginBottom: '2px',
-                textDecoration: 'none', transition: 'all 0.15s',
+                borderRadius: '8px', marginBottom: '2px', textDecoration: 'none',
+                transition: 'all 0.15s', gap: '8px',
+                borderLeft: active ? '2px solid var(--accent)' : '2px solid transparent',
               }}>
                 {label}
               </Link>
             );
           })}
+          <div style={{ height: '1px', background: 'var(--line)', margin: '6px 0 8px' }} />
           <button onClick={handleLogout} style={{
-            display: 'block', width: '100%', padding: '12px 16px', textAlign: 'left',
-            fontSize: '11px', color: 'var(--absent)', fontFamily: 'var(--mono)', letterSpacing: '0.06em',
-            background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase',
-            borderRadius: '8px', marginTop: '4px',
+            display: 'flex', width: '100%', padding: '13px 12px', alignItems: 'center',
+            fontSize: '11px', color: 'var(--absent)', fontFamily: 'var(--mono)',
+            letterSpacing: '0.08em', background: 'rgba(244,63,94,0.05)',
+            border: '1px solid rgba(244,63,94,0.15)', cursor: 'pointer',
+            textTransform: 'uppercase', borderRadius: '8px',
           }}>
             Sign out
           </button>

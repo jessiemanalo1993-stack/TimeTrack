@@ -78,9 +78,10 @@ export default function Employees() {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '24px',
   };
+  const boxClass = 'panel modal-box';
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }} className="page-wrap">
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '32px', gap: '12px', flexWrap: 'wrap' }}>
@@ -106,7 +107,7 @@ export default function Employees() {
         ) : employees.length === 0 ? (
           <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>No employees yet.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto' }} className="table-scroll">
             <table className="dark-table">
               <thead>
                 <tr>{['Name', 'Email', 'Shift', 'Work Days', 'Password', 'Actions'].map(h => <th key={h}>{h}</th>)}</tr>
@@ -169,8 +170,8 @@ export default function Employees() {
 
       {/* Create / Edit Modal */}
       {modal && (
-        <div style={overlayStyle}>
-          <div className="panel" style={{ width: '100%', maxWidth: '460px', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={overlayStyle} className="modal-overlay">
+          <div className={`${boxClass}`} style={{ width: '100%', maxWidth: '460px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="panel-header" style={{ borderTop: `2px solid ${modal === 'create' ? 'var(--accent)' : 'var(--ink-2)'}` }}>
               <span className="panel-title">{modal === 'create' ? 'Add Employee' : 'Edit Employee'}</span>
               <button onClick={() => setModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--ink-3)', lineHeight: 1, padding: '0 4px', transition: 'color 0.15s' }}
@@ -244,8 +245,8 @@ export default function Employees() {
 
       {/* Delete Confirm Modal */}
       {confirmDelete && (
-        <div style={overlayStyle}>
-          <div className="panel" style={{ width: '100%', maxWidth: '380px' }}>
+        <div style={overlayStyle} className="modal-overlay">
+          <div className={`${boxClass}`} style={{ width: '100%', maxWidth: '380px' }}>
             <div className="panel-header" style={{ borderTop: '2px solid var(--absent)' }}>
               <span className="panel-title" style={{ color: 'var(--absent)' }}>Delete Employee</span>
               <button onClick={() => { setConfirmDelete(null); setDeletePassword(''); setDeleteError(''); }}

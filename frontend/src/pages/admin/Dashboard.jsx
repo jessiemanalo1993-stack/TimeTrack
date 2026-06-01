@@ -42,7 +42,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }} className="page-wrap">
 
       {/* Page header */}
       <div style={{ marginBottom: '32px' }}>
@@ -54,8 +54,8 @@ export default function Dashboard() {
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '24px' }}
-        className="sm:grid-cols-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}
+        className="stat-grid">
         {stats.map(({ label, value, color, accentColor }) => (
           <div key={label} className="stat-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
@@ -84,7 +84,7 @@ export default function Dashboard() {
             No records for today.
           </p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto' }} className="table-scroll">
             <table className="dark-table">
               <thead>
                 <tr>

@@ -60,7 +60,7 @@ export default function LeaveRequests() {
   ];
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }} className="page-wrap">
 
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
@@ -70,8 +70,8 @@ export default function LeaveRequests() {
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '24px' }}
-        className="sm:grid-cols-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}
+        className="stat-grid">
         {stats.map(({ label, value, color, accent }) => (
           <div key={label} className="stat-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
@@ -88,7 +88,7 @@ export default function LeaveRequests() {
         <div className="panel-header accent-bar">
           <span className="panel-title">Filters</span>
         </div>
-        <div style={{ padding: '16px 20px', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end' }}>
+        <div style={{ padding: '16px 20px', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end' }} className="filter-row">
           <div>
             <label className="field-label">Status</label>
             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={selectStyle}
@@ -122,7 +122,7 @@ export default function LeaveRequests() {
         ) : requests.length === 0 ? (
           <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>No leave requests found.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto' }} className="table-scroll">
             <table className="dark-table">
               <thead>
                 <tr>

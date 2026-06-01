@@ -101,9 +101,9 @@ export default function EmployeeTimein() {
   const statusHeader = result ? 'Time-In Recorded' : timeoutResult ? 'Time-Out Recorded' : leaveResult ? 'Leave Submitted' : spResult ? 'Password Updated' : 'Employee Portal';
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative' }}>
       <div className="bg-glow" />
-      <div style={{ width: '100%', maxWidth: '420px', position: 'relative', zIndex: 1 }}>
+      <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1 }}>
 
         <div className="animate-fade-down" style={{ marginBottom: '32px', textAlign: 'center' }}>
           <h1 className="wordmark">Time<span style={{ color: 'var(--accent)' }}>Track</span></h1>

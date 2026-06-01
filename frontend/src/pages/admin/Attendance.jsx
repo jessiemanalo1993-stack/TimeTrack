@@ -65,7 +65,7 @@ export default function Attendance() {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }} className="page-wrap">
 
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
@@ -78,7 +78,7 @@ export default function Attendance() {
         <div className="panel-header accent-bar">
           <span className="panel-title">Filters</span>
         </div>
-        <div style={{ padding: '16px 20px', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end' }}>
+        <div style={{ padding: '16px 20px', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end' }} className="filter-row">
           <div>
             <label className="field-label">Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)}
@@ -139,7 +139,7 @@ export default function Attendance() {
         ) : records.length === 0 ? (
           <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>No records found.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto' }} className="table-scroll">
             <table className="dark-table">
               <thead>
                 <tr>{['Employee', 'Schedule', 'Time In', 'Time Out', 'Location', 'Status', 'Notes', ''].map((h, i) => <th key={i}>{h}</th>)}</tr>
@@ -186,8 +186,8 @@ export default function Attendance() {
 
       {/* Mark Absent Modal */}
       {absentModal && (
-        <div style={overlayStyle}>
-          <div className="panel" style={{ width: '100%', maxWidth: '380px' }}>
+        <div style={overlayStyle} className="modal-overlay">
+          <div className="panel modal-box" style={{ width: '100%', maxWidth: '380px' }}>
             <div className="panel-header" style={{ borderTop: '2px solid var(--absent)' }}>
               <span className="panel-title" style={{ color: 'var(--absent)' }}>Mark Absent</span>
               <button onClick={() => setAbsentModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--ink-3)', lineHeight: 1, padding: '0 4px' }}>×</button>
