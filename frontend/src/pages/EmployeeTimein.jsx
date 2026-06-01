@@ -32,10 +32,11 @@ const locationBtnStyle = (selected) => ({
 const todayManila = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
 
 export default function EmployeeTimein() {
-  const [mode, setMode] = useState('timein'); // 'timein' | 'leave' | 'timeout'
+  const [mode, setMode] = useState('timein'); // 'timein' | 'timeout' | 'leave' | 'setpassword'
 
   // Time-in state
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [workLocation, setWorkLocation] = useState('');
   const [leaveType, setLeaveType] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,6 +45,7 @@ export default function EmployeeTimein() {
 
   // Leave request state
   const [leaveEmail, setLeaveEmail] = useState('');
+  const [leavePassword, setLeavePassword] = useState('');
   const [leaveDate, setLeaveDate] = useState('');
   const [leaveRequestType, setLeaveRequestType] = useState('');
   const [leaveReason, setLeaveReason] = useState('');
@@ -53,27 +55,33 @@ export default function EmployeeTimein() {
 
   // Time-out state
   const [timeoutEmail, setTimeoutEmail] = useState('');
+  const [timeoutPassword, setTimeoutPassword] = useState('');
   const [timeoutLoading, setTimeoutLoading] = useState(false);
   const [timeoutResult, setTimeoutResult] = useState(null);
   const [timeoutError, setTimeoutError] = useState('');
 
+  // Set password state
+  const [spEmail, setSpEmail] = useState('');
+  const [spCurrent, setSpCurrent] = useState('');
+  const [spNew, setSpNew] = useState('');
+  const [spConfirm, setSpConfirm] = useState('');
+  const [spLoading, setSpLoading] = useState(false);
+  const [spResult, setSpResult] = useState(null);
+  const [spError, setSpError] = useState('');
+
   function switchMode(m) {
     setMode(m);
-    setError('');
-    setLeaveError('');
-    setTimeoutError('');
-    setResult(null);
-    setLeaveResult(null);
-    setTimeoutResult(null);
+    setError(''); setLeaveError(''); setTimeoutError(''); setSpError('');
+    setResult(null); setLeaveResult(null); setTimeoutResult(null); setSpResult(null);
   }
 
   async function handleTimein(e) {
     e.preventDefault();
     setError(''); setResult(null); setLoading(true);
     try {
-      const data = await api.timein(email.trim(), workLocation, leaveType || undefined);
+      const data = await api.timein(email.trim(), password, workLocation, leaveType || undefined);
       setResult(data);
-      setEmail(''); setWorkLocation(''); setLeaveType('');
+      setEmail(''); setPassword(''); setWorkLocation(''); setLeaveType('');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -87,12 +95,13 @@ export default function EmployeeTimein() {
     try {
       const data = await api.fileLeave({
         email: leaveEmail.trim(),
+        password: leavePassword,
         date: leaveDate,
         leave_type: leaveRequestType,
         reason: leaveReason.trim() || undefined,
       });
       setLeaveResult(data);
-      setLeaveEmail(''); setLeaveDate(''); setLeaveRequestType(''); setLeaveReason('');
+      setLeaveEmail(''); setLeavePassword(''); setLeaveDate(''); setLeaveRequestType(''); setLeaveReason('');
     } catch (err) {
       setLeaveError(err.message);
     } finally {
@@ -100,23 +109,43 @@ export default function EmployeeTimein() {
     }
   }
 
-  const timeinDisabled = loading || !email || !workLocation || (workLocation === 'On Leave' && !leaveType);
-  const leaveDisabled = leaveLoading || !leaveEmail || !leaveDate || !leaveRequestType;
-  const timeoutDisabled = timeoutLoading || !timeoutEmail;
-
   async function handleTimeout(e) {
     e.preventDefault();
     setTimeoutError(''); setTimeoutResult(null); setTimeoutLoading(true);
     try {
-      const data = await api.timeout(timeoutEmail.trim());
+      const data = await api.timeout(timeoutEmail.trim(), timeoutPassword);
       setTimeoutResult(data);
-      setTimeoutEmail('');
+      setTimeoutEmail(''); setTimeoutPassword('');
     } catch (err) {
       setTimeoutError(err.message);
     } finally {
       setTimeoutLoading(false);
     }
   }
+
+  async function handleSetPassword(e) {
+    e.preventDefault();
+    setSpError(''); setSpResult(null);
+    if (spNew !== spConfirm) { setSpError('New passwords do not match'); return; }
+    if (spNew.length < 6) { setSpError('Password must be at least 6 characters'); return; }
+    setSpLoading(true);
+    try {
+      const data = await api.setPassword({ email: spEmail.trim(), current_password: spCurrent || undefined, new_password: spNew });
+      setSpResult(data);
+      setSpEmail(''); setSpCurrent(''); setSpNew(''); setSpConfirm('');
+    } catch (err) {
+      setSpError(err.message);
+    } finally {
+      setSpLoading(false);
+    }
+  }
+
+  const timeinDisabled = loading || !email || !password || !workLocation || (workLocation === 'On Leave' && !leaveType);
+  const leaveDisabled = leaveLoading || !leaveEmail || !leavePassword || !leaveDate || !leaveRequestType;
+  const timeoutDisabled = timeoutLoading || !timeoutEmail || !timeoutPassword;
+  const spDisabled = spLoading || !spEmail || !spNew || !spConfirm;
+
+  const hasAnyResult = result || leaveResult || timeoutResult || spResult;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
@@ -134,17 +163,22 @@ export default function EmployeeTimein() {
           {/* Panel header */}
           <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '14px 20px', textAlign: 'center' }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)' }}>
-              {result ? 'Time-In Recorded' : timeoutResult ? 'Time-Out Recorded' : leaveResult ? 'Leave Submitted' : 'This is a prototype'}
+              {result ? 'Time-In Recorded'
+                : timeoutResult ? 'Time-Out Recorded'
+                : leaveResult ? 'Leave Submitted'
+                : spResult ? 'Password Updated'
+                : 'Employee Portal'}
             </span>
           </div>
 
           {/* Mode toggle — only show when no result */}
-          {!result && !leaveResult && !timeoutResult && (
-            <div style={{ borderBottom: '1px solid var(--line)', padding: '12px 20px', display: 'flex', gap: '8px' }}>
+          {!hasAnyResult && (
+            <div style={{ borderBottom: '1px solid var(--line)', padding: '12px 20px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {[
                 { key: 'timein', label: 'Time In' },
                 { key: 'timeout', label: 'Time Out' },
                 { key: 'leave', label: 'File Leave' },
+                { key: 'setpassword', label: 'Set Password' },
               ].map(({ key, label }) => {
                 const active = mode === key;
                 return (
@@ -153,7 +187,7 @@ export default function EmployeeTimein() {
                     type="button"
                     onClick={() => switchMode(key)}
                     style={{
-                      padding: '6px 14px',
+                      padding: '6px 12px',
                       border: active ? '1px solid var(--ink)' : '1px solid var(--line)',
                       background: active ? 'var(--ink)' : 'var(--bg)',
                       color: active ? 'var(--bg)' : 'var(--ink-3)',
@@ -185,6 +219,16 @@ export default function EmployeeTimein() {
                     onFocus={e => e.target.style.borderColor = 'var(--ink)'}
                     onBlur={e => e.target.style.borderColor = 'var(--line)'}
                   />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Password</label>
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+                    placeholder="Your password" required style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                  <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '5px 0 0' }}>First time? Your password will be set automatically.</p>
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
@@ -265,6 +309,15 @@ export default function EmployeeTimein() {
                   <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Work Email</label>
                   <input type="email" value={leaveEmail} onChange={e => setLeaveEmail(e.target.value)}
                     placeholder="you@company.com" required autoFocus style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Password</label>
+                  <input type="password" value={leavePassword} onChange={e => setLeavePassword(e.target.value)}
+                    placeholder="Your password" required style={inputStyle}
                     onFocus={e => e.target.style.borderColor = 'var(--ink)'}
                     onBlur={e => e.target.style.borderColor = 'var(--line)'}
                   />
@@ -352,10 +405,19 @@ export default function EmployeeTimein() {
             {/* ── TIME OUT form ── */}
             {mode === 'timeout' && !timeoutResult && (
               <form onSubmit={handleTimeout} className="animate-slide-down">
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Work Email</label>
                   <input type="email" value={timeoutEmail} onChange={e => setTimeoutEmail(e.target.value)}
                     placeholder="you@company.com" required autoFocus style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Password</label>
+                  <input type="password" value={timeoutPassword} onChange={e => setTimeoutPassword(e.target.value)}
+                    placeholder="Your password" required style={inputStyle}
                     onFocus={e => e.target.style.borderColor = 'var(--ink)'}
                     onBlur={e => e.target.style.borderColor = 'var(--line)'}
                   />
@@ -403,6 +465,79 @@ export default function EmployeeTimein() {
                   onMouseEnter={e => { e.target.style.borderColor = 'var(--ink)'; e.target.style.color = 'var(--ink)'; }}
                   onMouseLeave={e => { e.target.style.borderColor = 'var(--line)'; e.target.style.color = 'var(--ink-2)'; }}>
                   Record another
+                </button>
+              </div>
+            )}
+
+            {/* ── SET PASSWORD form ── */}
+            {mode === 'setpassword' && !spResult && (
+              <form onSubmit={handleSetPassword} className="animate-slide-down">
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Work Email</label>
+                  <input type="email" value={spEmail} onChange={e => setSpEmail(e.target.value)}
+                    placeholder="you@company.com" required autoFocus style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    Current Password <span style={{ color: 'var(--ink-3)', fontWeight: '400' }}>(if already set)</span>
+                  </label>
+                  <input type="password" value={spCurrent} onChange={e => setSpCurrent(e.target.value)}
+                    placeholder="Leave blank if setting for first time" style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>New Password</label>
+                  <input type="password" value={spNew} onChange={e => setSpNew(e.target.value)}
+                    placeholder="Min 6 characters" required minLength={6} style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>Confirm New Password</label>
+                  <input type="password" value={spConfirm} onChange={e => setSpConfirm(e.target.value)}
+                    placeholder="Repeat new password" required style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                  />
+                </div>
+
+                {spError && (
+                  <div style={{ borderLeft: '2px solid var(--absent)', paddingLeft: '10px', marginBottom: '16px' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--absent)', margin: 0 }}>{spError}</p>
+                  </div>
+                )}
+
+                <button type="submit" disabled={spDisabled}
+                  style={{ width: '100%', padding: '11px', border: '1px solid var(--ink)', background: spDisabled ? 'var(--line)' : 'var(--ink)', color: spDisabled ? 'var(--ink-3)' : 'var(--bg)', fontSize: '13px', fontWeight: '600', cursor: spDisabled ? 'not-allowed' : 'pointer', borderRadius: '2px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', transition: 'all 0.15s' }}>
+                  {spLoading ? 'Saving...' : 'Set Password →'}
+                </button>
+              </form>
+            )}
+
+            {/* ── SET PASSWORD result ── */}
+            {mode === 'setpassword' && spResult && (
+              <div className="animate-fade-up">
+                <div style={{ borderLeft: '3px solid var(--present)', paddingLeft: '14px', marginBottom: '24px' }}>
+                  <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 4px' }}>{spResult.name}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--present)', fontFamily: 'var(--mono)', margin: 0 }}>Password updated successfully</p>
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--ink-2)', marginBottom: '20px' }}>
+                  Your password has been saved. Use it the next time you time in or out.
+                </p>
+                <button onClick={() => { setSpResult(null); switchMode('timein'); }}
+                  style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink-2)', fontSize: '13px', cursor: 'pointer', borderRadius: '2px', fontFamily: 'var(--font)', transition: 'border-color 0.15s, color 0.15s' }}
+                  onMouseEnter={e => { e.target.style.borderColor = 'var(--ink)'; e.target.style.color = 'var(--ink)'; }}
+                  onMouseLeave={e => { e.target.style.borderColor = 'var(--line)'; e.target.style.color = 'var(--ink-2)'; }}>
+                  Go to Time In
                 </button>
               </div>
             )}

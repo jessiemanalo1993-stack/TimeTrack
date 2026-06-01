@@ -6,6 +6,7 @@ const EMPTY_FORM = {
   name: '', email: '',
   shift_start: '09:00', shift_end: '18:00',
   work_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+  password: '',
 };
 
 const th = { padding: '10px 16px', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.07em', color: 'var(--ink-3)', textTransform: 'uppercase', textAlign: 'left', borderBottom: '1px solid var(--line)', background: 'var(--bg-2)', fontWeight: '500' };
@@ -53,6 +54,7 @@ export default function Employees() {
       shift_start: emp.shift_start?.slice(0, 5) || '09:00',
       shift_end: emp.shift_end?.slice(0, 5) || '18:00',
       work_days: emp.work_days || [],
+      password: '',
     });
     setEditId(emp.id); setError(''); setModal('edit');
   }
@@ -66,7 +68,9 @@ export default function Employees() {
     if (!form.work_days.length) { setError('Select at least one work day'); return; }
     setSaving(true); setError('');
     try {
-      modal === 'create' ? await api.createEmployee(form) : await api.updateEmployee(editId, form);
+      const payload = { ...form };
+      if (!payload.password) delete payload.password;
+      modal === 'create' ? await api.createEmployee(payload) : await api.updateEmployee(editId, payload);
       setModal(null); load();
     } catch (err) { setError(err.message); }
     finally { setSaving(false); }
@@ -106,7 +110,7 @@ export default function Employees() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr>{['Name', 'Email', 'Shift', 'Work Days', 'Actions'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
+                <tr>{['Name', 'Email', 'Shift', 'Work Days', 'Password', 'Actions'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {employees.map(emp => (
@@ -129,6 +133,11 @@ export default function Employees() {
                           </span>
                         ))}
                       </div>
+                    </td>
+                    <td style={td}>
+                      <span style={{ fontSize: '10px', fontFamily: 'var(--mono)', padding: '2px 6px', border: `1px solid ${emp.password_hash ? 'var(--present)' : 'var(--line)'}`, color: emp.password_hash ? 'var(--present)' : 'var(--ink-3)', letterSpacing: '0.04em' }}>
+                        {emp.password_hash ? 'SET' : 'NONE'}
+                      </span>
                     </td>
                     <td style={td}>
                       <div style={{ display: 'flex', gap: '12px' }}>
@@ -202,6 +211,21 @@ export default function Employees() {
                     );
                   })}
                 </div>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={labelStyle}>
+                  {modal === 'edit' ? 'Reset Password' : 'Password *'}
+                  {modal === 'edit' && <span style={{ color: 'var(--ink-3)', fontWeight: '400', marginLeft: '4px' }}>(leave blank to keep current)</span>}
+                </label>
+                <input type="password" value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder={modal === 'edit' ? 'Enter new password to reset' : 'Min 6 characters'}
+                  required={modal === 'create'}
+                  minLength={6}
+                  style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = 'var(--ink)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                />
               </div>
               {error && (
                 <div style={{ borderLeft: '2px solid var(--absent)', paddingLeft: '10px', marginBottom: '14px' }}>
