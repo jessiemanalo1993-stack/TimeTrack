@@ -57,7 +57,7 @@ export default function EmployeeTimein() {
           {/* Panel header rule */}
           <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '14px 20px', textAlign: 'center' }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)' }}>
-              {result ? 'Time-In Recorded' : '"Are you in or out?" — Sandara Park'}
+              {result ? 'Time-In Recorded' : 'This is a prototype'}
             </span>
           </div>
 
