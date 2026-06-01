@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+
+:root {
+  --ink: #111111;
+  --ink-2: #555555;
+  --ink-3: #999999;
+  --line: #e2e2e2;
+  --line-2: #f0f0f0;
+  --bg: #ffffff;
+  --bg-2: #fafafa;
+  --accent: #111111;
+  --present: #16a34a;
+  --late: #d97706;
+  --absent: #dc2626;
+  --font: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', ui-monospace, monospace;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-2);
+  font-family: var(--font);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Flat input baseline */
+input, select, textarea {
+  font-family: var(--font);
+}
