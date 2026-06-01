@@ -24,12 +24,7 @@ export default function Navbar() {
 
           {/* Logo + wordmark */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '28px', height: '28px', background: 'var(--sap-blue)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="6" stroke="white" strokeWidth="1.5"/>
-                <path d="M8 5v3l2 2" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
+            <img src="/logo.png" alt="TimeTrack" style={{ width: '32px', height: '32px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
             <span style={{ fontFamily: 'var(--font)', fontSize: '15px', fontWeight: '700', color: '#fff', letterSpacing: '0.02em' }}>
               TimeTrack
             </span>

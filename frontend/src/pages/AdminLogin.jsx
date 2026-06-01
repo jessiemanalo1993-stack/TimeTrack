@@ -32,11 +32,8 @@ export default function AdminLogin() {
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '52px', height: '52px', background: 'var(--sap-blue)', borderRadius: '12px', marginBottom: '14px', boxShadow: '0 4px 16px rgba(0,112,242,0.4)' }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="11" width="18" height="11" rx="2" stroke="white" strokeWidth="1.8"/>
-              <path d="M7 11V7a5 5 0 0110 0v4" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '72px', height: '72px', background: 'rgba(255,255,255,0.1)', borderRadius: '18px', marginBottom: '14px', backdropFilter: 'blur(8px)' }}>
+            <img src="/logo.png" alt="TimeTrack" style={{ width: '52px', height: '52px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
           </div>
           <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#fff', margin: '0 0 4px', letterSpacing: '-0.01em' }}>
             TimeTrack Console
