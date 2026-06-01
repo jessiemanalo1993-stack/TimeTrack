@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const bcrypt = require('bcryptjs');
 const supabase = require('../supabase');
 const authMiddleware = require('../middleware/auth');
 const { todayLocal } = require('../utils/time');
@@ -8,13 +7,10 @@ const ALLOWED_LEAVE_TYPES = ['Sick Leave', 'Vacation Leave', 'Emergency Leave', 
 
 // POST /api/leave — public, employee files a leave request
 router.post('/', async (req, res) => {
-  const { email, password, date, leave_type, reason } = req.body;
+  const { email, date, leave_type, reason } = req.body;
 
   if (!email || !date || !leave_type) {
     return res.status(400).json({ error: 'email, date, and leave_type are required' });
-  }
-  if (!password) {
-    return res.status(400).json({ error: 'Password is required' });
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
@@ -28,21 +24,12 @@ router.post('/', async (req, res) => {
 
   const { data: employee, error: empError } = await supabase
     .from('employees')
-    .select('id, name, email, password_hash')
+    .select('id, name, email')
     .eq('email', email.toLowerCase().trim())
     .single();
 
   if (empError || !employee) {
     return res.status(404).json({ error: 'No employee found with that email address' });
-  }
-
-  // Password check
-  if (employee.password_hash) {
-    const match = await bcrypt.compare(password, employee.password_hash);
-    if (!match) return res.status(401).json({ error: 'Incorrect password' });
-  } else {
-    const hash = await bcrypt.hash(password, 10);
-    await supabase.from('employees').update({ password_hash: hash }).eq('id', employee.id);
   }
 
   // Block if attendance already exists for that date

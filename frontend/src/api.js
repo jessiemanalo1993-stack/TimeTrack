@@ -38,6 +38,8 @@ export const api = {
   // Auth
   login: (username, password) =>
     request('POST', '/api/auth/login', { username, password }),
+  employeeLogin: (email, password) =>
+    request('POST', '/api/auth/employee-login', { email, password }),
   verifyAdminPassword: (password) =>
     request('POST', '/api/auth/verify-password', { password }, true),
 
@@ -48,8 +50,8 @@ export const api = {
   deleteEmployee: (id) => request('DELETE', `/api/employees/${id}`, null, true),
 
   // Attendance
-  timein: (email, password, work_location, leave_type) => request('POST', '/api/attendance/timein', { email, password, work_location, leave_type }),
-  timeout: (email, password) => request('POST', '/api/attendance/timeout', { email, password }),
+  timein: (email, work_location, leave_type) => request('POST', '/api/attendance/timein', { email, work_location, leave_type }),
+  timeout: (email) => request('POST', '/api/attendance/timeout', { email }),
   getAttendance: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request('GET', `/api/attendance${qs ? '?' + qs : ''}`, null, true);

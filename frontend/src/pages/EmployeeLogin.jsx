@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 
 const inputStyle = {
@@ -16,12 +15,11 @@ const inputStyle = {
   transition: 'border-color 0.15s',
 };
 
-export default function AdminLogin() {
-  const [username, setUsername] = useState('');
+export default function EmployeeLogin() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -29,9 +27,9 @@ export default function AdminLogin() {
     setError('');
     setLoading(true);
     try {
-      const { token } = await api.login(username, password);
-      login(token);
-      navigate('/admin');
+      const data = await api.employeeLogin(email.trim(), password);
+      localStorage.setItem('tt_employee', JSON.stringify({ name: data.name, email: data.email }));
+      navigate('/portal');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -39,35 +37,35 @@ export default function AdminLogin() {
     }
   }
 
+  const disabled = loading || !email || !password;
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div style={{ width: '100%', maxWidth: '360px' }}>
 
-        <div className="animate-fade-down" style={{ marginBottom: '36px', textAlign: 'center' }}>
-          <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '6px' }}>
-            Manager Panel
-          </p>
+        <div className="animate-fade-down" style={{ marginBottom: '40px', textAlign: 'center' }}>
           <h1 style={{ fontFamily: 'var(--mono)', fontSize: '22px', fontWeight: '500', color: 'var(--ink)', letterSpacing: '0.04em', margin: 0 }}>
             TimeTrack
           </h1>
         </div>
 
         <div className="animate-rotate-in" style={{ border: '1px solid var(--line)', background: 'var(--bg)', borderRadius: '2px' }}>
-          <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '14px 20px' }}>
+          <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '14px 20px', textAlign: 'center' }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>
-              Sign In
+              Employee Sign In
             </span>
           </div>
 
           <form onSubmit={handleSubmit} style={{ padding: '24px 20px' }}>
             <div style={{ marginBottom: '14px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>
-                Username
+                Work Email
               </label>
               <input
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@company.com"
                 required
                 autoFocus
                 style={inputStyle}
@@ -75,6 +73,7 @@ export default function AdminLogin() {
                 onBlur={e => e.target.style.borderColor = 'var(--line)'}
               />
             </div>
+
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '6px' }}>
                 Password
@@ -83,11 +82,15 @@ export default function AdminLogin() {
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                placeholder="Your password"
                 required
                 style={inputStyle}
                 onFocus={e => e.target.style.borderColor = 'var(--ink)'}
                 onBlur={e => e.target.style.borderColor = 'var(--line)'}
               />
+              <p style={{ fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', margin: '5px 0 0' }}>
+                Forgot password? Contact your manager.
+              </p>
             </div>
 
             {error && (
@@ -98,16 +101,16 @@ export default function AdminLogin() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={disabled}
               style={{
                 width: '100%',
                 padding: '11px',
                 border: '1px solid var(--ink)',
-                background: loading ? 'var(--line)' : 'var(--ink)',
-                color: loading ? 'var(--ink-3)' : 'var(--bg)',
+                background: disabled ? 'var(--line)' : 'var(--ink)',
+                color: disabled ? 'var(--ink-3)' : 'var(--bg)',
                 fontSize: '13px',
                 fontWeight: '600',
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: disabled ? 'not-allowed' : 'pointer',
                 borderRadius: '2px',
                 fontFamily: 'var(--mono)',
                 letterSpacing: '0.06em',
@@ -121,8 +124,9 @@ export default function AdminLogin() {
         </div>
 
         <p className="animate-fade-up" style={{ textAlign: 'center', fontSize: '11px', color: 'var(--ink-3)', marginTop: '20px', fontFamily: 'var(--mono)', animationDelay: '0.4s' }}>
-          <a href="/" style={{ color: 'var(--ink-2)', textDecoration: 'underline' }}>
-            ← Employee Sign In
+          Manager?{' '}
+          <a href="/admin/login" style={{ color: 'var(--ink-2)', textDecoration: 'underline' }}>
+            Sign in to Manager Panel
           </a>
         </p>
       </div>

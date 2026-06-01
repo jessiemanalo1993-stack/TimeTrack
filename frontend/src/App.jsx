@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
+import EmployeeLogin from './pages/EmployeeLogin';
 import EmployeeTimein from './pages/EmployeeTimein';
 import AdminLogin from './pages/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
@@ -34,7 +35,8 @@ export default function App() {
       <BrowserRouter>
         <TitleManager />
         <Routes>
-          <Route path="/" element={<EmployeeTimein />} />
+          <Route path="/" element={<EmployeeLogin />} />
+          <Route path="/portal" element={<EmployeeTimein />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={
             <ProtectedRoute>

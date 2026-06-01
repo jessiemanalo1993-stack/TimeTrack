@@ -37,7 +37,34 @@ router.post('/login', loginLimiter, (req, res) => {
   res.json({ token });
 });
 
-// POST /api/auth/verify-password — admin only, confirms password before destructive actions
+// POST /api/auth/employee-login — public, employee login by email + password
+const bcrypt = require('bcryptjs');
+const supabase = require('../supabase');
+router.post('/employee-login', loginLimiter, async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
+  const { data: employee, error: empError } = await supabase
+    .from('employees')
+    .select('id, name, email, password_hash')
+    .eq('email', email.toLowerCase().trim())
+    .single();
+
+  if (empError || !employee) {
+    return res.status(404).json({ error: 'No employee found with that email address' });
+  }
+
+  if (employee.password_hash) {
+    const match = await bcrypt.compare(password, employee.password_hash);
+    if (!match) return res.status(401).json({ error: 'Incorrect password' });
+  } else {
+    // First use — set password
+    const hash = await bcrypt.hash(password, 10);
+    await supabase.from('employees').update({ password_hash: hash }).eq('id', employee.id);
+  }
+
+  res.json({ name: employee.name, email: employee.email });
+});
 const authMiddleware = require('../middleware/auth');
 router.post('/verify-password', authMiddleware, loginLimiter, (req, res) => {
   const { password } = req.body;
