@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 
 const navLinks = [
@@ -17,16 +17,40 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [bellOpen, setBellOpen] = useState(false);
+  const bellRef = useRef(null);
+
+  const pendingCount = pendingRequests.length;
 
   useEffect(() => {
     if (!isAuthenticated) return;
     api.getManagerRequests()
-      .then(reqs => setPendingCount(reqs.filter(r => r.status === 'Pending').length))
-      .catch(() => setPendingCount(0));
+      .then(reqs => setPendingRequests(reqs.filter(r => r.status === 'Pending')))
+      .catch(() => setPendingRequests([]));
   }, [isAuthenticated, pathname]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (bellRef.current && !bellRef.current.contains(e.target)) {
+        setBellOpen(false);
+      }
+    }
+    if (bellOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [bellOpen]);
+
   function handleLogout() { logout(); navigate('/admin/login'); }
+
+  function handleBellClick() {
+    setBellOpen(o => !o);
+  }
+
+  function handleGoToManagers() {
+    setBellOpen(false);
+    navigate('/admin/managers');
+  }
 
   return (
     <nav style={{
@@ -78,44 +102,130 @@ export default function Navbar() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-            {/* Bell notification icon — desktop only */}
+            {/* Bell notification — desktop only */}
             {pendingCount > 0 && (
-              <button
-                onClick={() => navigate('/admin/managers')}
-                className="hidden sm:flex"
-                title={`${pendingCount} pending manager request${pendingCount !== 1 ? 's' : ''}`}
-                style={{
-                  position: 'relative',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '8px',
-                  transition: 'background 0.2s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'none'}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
-                <span style={{
-                  position: 'absolute', top: '2px', right: '2px',
-                  width: '16px', height: '16px', borderRadius: '50%',
-                  background: '#f87171', color: '#fff',
-                  fontSize: '9px', fontFamily: 'var(--mono)', fontWeight: '700',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: '1.5px solid rgba(20,22,39,0.9)',
-                  boxShadow: '0 0 6px rgba(248,113,113,0.6)',
-                  lineHeight: 1,
-                }}>
-                  {pendingCount}
-                </span>
-              </button>
+              <div ref={bellRef} className="hidden sm:block" style={{ position: 'relative' }}>
+                <button
+                  onClick={handleBellClick}
+                  title={`${pendingCount} pending manager request${pendingCount !== 1 ? 's' : ''}`}
+                  style={{
+                    position: 'relative',
+                    background: bellOpen ? 'rgba(248,113,113,0.08)' : 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '8px',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={e => { if (!bellOpen) e.currentTarget.style.background = 'rgba(248,113,113,0.08)'; }}
+                  onMouseLeave={e => { if (!bellOpen) e.currentTarget.style.background = 'none'; }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  <span style={{
+                    position: 'absolute', top: '2px', right: '2px',
+                    width: '16px', height: '16px', borderRadius: '50%',
+                    background: '#f87171', color: '#fff',
+                    fontSize: '9px', fontFamily: 'var(--mono)', fontWeight: '700',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '1.5px solid rgba(20,22,39,0.9)',
+                    boxShadow: '0 0 6px rgba(248,113,113,0.6)',
+                    lineHeight: 1,
+                  }}>
+                    {pendingCount}
+                  </span>
+                </button>
+
+                {/* Dropdown */}
+                {bellOpen && (
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                    width: '300px',
+                    background: 'rgba(26,29,46,0.98)',
+                    border: '1px solid var(--line)',
+                    borderRadius: '14px',
+                    boxShadow: '0 16px 48px rgba(0,0,0,0.5)',
+                    overflow: 'hidden',
+                    backdropFilter: 'blur(20px)',
+                    zIndex: 100,
+                  }}>
+                    {/* Header */}
+                    <div style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid var(--line)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    }}>
+                      <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
+                        Pending Requests
+                      </span>
+                      <span style={{
+                        fontSize: '9px', fontFamily: 'var(--mono)', fontWeight: '700',
+                        background: 'rgba(248,113,113,0.15)', color: '#f87171',
+                        border: '1px solid rgba(248,113,113,0.3)',
+                        borderRadius: '20px', padding: '2px 7px',
+                      }}>
+                        {pendingCount}
+                      </span>
+                    </div>
+
+                    {/* Request rows */}
+                    <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
+                      {pendingRequests.map(r => (
+                        <button
+                          key={r.id}
+                          onClick={handleGoToManagers}
+                          style={{
+                            display: 'block', width: '100%', textAlign: 'left',
+                            padding: '12px 16px',
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            borderBottom: '1px solid rgba(255,255,255,0.04)',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(168,85,247,0.07)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                        >
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--ink)', marginBottom: '2px' }}>
+                            {r.name}
+                          </div>
+                          <div style={{ fontSize: '11px', fontFamily: 'var(--mono)', color: 'var(--ink-3)' }}>
+                            {r.username}
+                          </div>
+                          {r.reason && (
+                            <div style={{
+                              fontSize: '11px', color: 'var(--ink-3)', marginTop: '4px',
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>
+                              {r.reason}
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Footer */}
+                    <button
+                      onClick={handleGoToManagers}
+                      style={{
+                        display: 'block', width: '100%', padding: '11px 16px',
+                        fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em',
+                        textTransform: 'uppercase', textAlign: 'center',
+                        color: '#a855f7', background: 'rgba(168,85,247,0.06)',
+                        border: 'none', borderTop: '1px solid var(--line)',
+                        cursor: 'pointer', transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(168,85,247,0.12)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(168,85,247,0.06)'}
+                    >
+                      View all in Managers →
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
 
             <button onClick={handleLogout} className="hidden sm:block" style={{
