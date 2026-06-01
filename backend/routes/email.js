@@ -11,6 +11,12 @@ router.post('/send-report', authMiddleware, async (req, res) => {
   const from = date_from || todayLocal();
   const to = date_to || todayLocal();
 
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+    return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+  }
+
+  const safeSubject = subject ? subject.replace(/[<>"']/g, '').slice(0, 200).trim() : null;
+
   // 1. Fetch attendance records
   let attQuery = supabase
     .from('attendance')
@@ -22,7 +28,10 @@ router.post('/send-report', authMiddleware, async (req, res) => {
   if (employee_id) attQuery = attQuery.eq('employee_id', employee_id);
 
   const { data: records, error: attError } = await attQuery;
-  if (attError) return res.status(500).json({ error: attError.message });
+  if (attError) {
+    console.error('Email report fetch error:', attError);
+    return res.status(500).json({ error: 'Failed to fetch attendance records' });
+  }
   if (!records.length) return res.status(400).json({ error: 'No attendance records found for the selected range' });
 
   // 2. Fetch recipients
@@ -30,7 +39,10 @@ router.post('/send-report', authMiddleware, async (req, res) => {
   if (recipient_id) recipientQuery = recipientQuery.eq('id', recipient_id);
 
   const { data: employees, error: empError } = await recipientQuery;
-  if (empError) return res.status(500).json({ error: empError.message });
+  if (empError) {
+    console.error('Email recipients fetch error:', empError);
+    return res.status(500).json({ error: 'Failed to fetch recipients' });
+  }
   if (!employees.length) return res.status(400).json({ error: 'No employees found' });
 
   // 3. Build Excel file in memory
@@ -107,7 +119,7 @@ router.post('/send-report', authMiddleware, async (req, res) => {
   <div style="max-width:600px;margin:32px auto;background:#ffffff;border:1px solid #e2e2e2;">
     <div style="border-top:3px solid #111111;padding:24px 28px 20px;">
       <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.1em;color:#999;text-transform:uppercase;font-family:monospace;">TimeTrack</p>
-      <h1 style="margin:0;font-size:20px;font-weight:600;color:#111;">${subject || `Attendance Report — ${dateLabel}`}</h1>
+      <h1 style="margin:0;font-size:20px;font-weight:600;color:#111;">${safeSubject || `Attendance Report — ${dateLabel}`}</h1>
     </div>
     <div style="padding:0 28px 20px;border-bottom:1px solid #f0f0f0;">
       <table style="width:100%;border-collapse:collapse;">
@@ -161,7 +173,7 @@ router.post('/send-report', authMiddleware, async (req, res) => {
 
   // 6. Send via Brevo
   const toAddresses = employees.map(e => ({ email: e.email, name: e.name }));
-  const emailSubject = subject || `Attendance Report — ${dateLabel}`;
+  const emailSubject = safeSubject || `Attendance Report — ${dateLabel}`;
   const fromEmail = process.env.BREVO_FROM_EMAIL || 'noreply@example.com';
   const fromName = process.env.BREVO_FROM_NAME || 'TimeTrack';
 
@@ -181,8 +193,8 @@ router.post('/send-report', authMiddleware, async (req, res) => {
 
     res.json({ success: true, sent_to: toAddresses.length, recipients: toAddresses.map(e => e.email) });
   } catch (err) {
-    const msg = err.response?.data?.message || err.message;
-    res.status(500).json({ error: msg });
+    console.error('Brevo send error:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Failed to send email' });
   }
 });
 

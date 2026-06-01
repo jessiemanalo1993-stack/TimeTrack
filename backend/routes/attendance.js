@@ -66,7 +66,10 @@ router.post('/timein', async (req, res) => {
     .select()
     .single();
 
-  if (insertError) return res.status(500).json({ error: insertError.message });
+  if (insertError) {
+    console.error('Insert error:', insertError);
+    return res.status(500).json({ error: 'Failed to record attendance' });
+  }
 
   res.json({
     name: employee.name,
@@ -89,6 +92,18 @@ router.get('/', authMiddleware, async (req, res) => {
   const from = date_from || todayLocal();
   const to = date_to || todayLocal();
 
+  // Validate date format
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+    return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+  }
+  if (from > to) {
+    return res.status(400).json({ error: 'date_from must be before date_to' });
+  }
+  const daysDiff = (new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24);
+  if (daysDiff > 366) {
+    return res.status(400).json({ error: 'Date range cannot exceed 366 days' });
+  }
+
   let query = supabase
     .from('attendance')
     .select(`
@@ -103,7 +118,10 @@ router.get('/', authMiddleware, async (req, res) => {
   if (employee_id) query = query.eq('employee_id', employee_id);
 
   const { data, error } = await query;
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('Attendance fetch error:', error);
+    return res.status(500).json({ error: 'Failed to fetch attendance records' });
+  }
   res.json(data);
 });
 
@@ -123,7 +141,10 @@ router.post('/mark-absent', authMiddleware, async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('Mark absent error:', error);
+    return res.status(500).json({ error: 'Failed to mark absent' });
+  }
   res.json(data);
 });
 
@@ -133,7 +154,10 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     .from('attendance')
     .delete()
     .eq('id', req.params.id);
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('Attendance delete error:', error);
+    return res.status(500).json({ error: 'Failed to delete attendance record' });
+  }
   res.json({ success: true });
 });
 
@@ -156,7 +180,10 @@ router.get('/export', authMiddleware, async (req, res) => {
   if (employee_id) query = query.eq('employee_id', employee_id);
 
   const { data, error } = await query;
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('Export fetch error:', error);
+    return res.status(500).json({ error: 'Failed to fetch attendance records' });
+  }
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'TimeTrack';

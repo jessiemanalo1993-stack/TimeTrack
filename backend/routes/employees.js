@@ -10,7 +10,10 @@ router.get('/', async (req, res) => {
     .from('employees')
     .select('*')
     .order('name', { ascending: true });
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('Employees fetch error:', error);
+    return res.status(500).json({ error: 'Failed to fetch employees' });
+  }
   res.json(data);
 });
 
@@ -20,14 +23,18 @@ router.post('/', async (req, res) => {
   if (!name || !email || !shift_start || !work_days?.length) {
     return res.status(400).json({ error: 'name, email, shift_start, and work_days are required' });
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
   const { data, error } = await supabase
     .from('employees')
-    .insert({ name, email: email.toLowerCase(), shift_start, work_days })
+    .insert({ name: name.trim(), email: email.toLowerCase().trim(), shift_start, work_days })
     .select()
     .single();
   if (error) {
     if (error.code === '23505') return res.status(409).json({ error: 'Email already exists' });
-    return res.status(500).json({ error: error.message });
+    console.error('Employee create error:', error);
+    return res.status(500).json({ error: 'Failed to create employee' });
   }
   res.status(201).json(data);
 });
@@ -36,8 +43,13 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   const { name, email, shift_start, work_days } = req.body;
   const updates = {};
-  if (name) updates.name = name;
-  if (email) updates.email = email.toLowerCase();
+  if (name) updates.name = name.trim();
+  if (email) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+    updates.email = email.toLowerCase().trim();
+  }
   if (shift_start) updates.shift_start = shift_start;
   if (work_days) updates.work_days = work_days;
 
@@ -47,7 +59,11 @@ router.put('/:id', async (req, res) => {
     .eq('id', req.params.id)
     .select()
     .single();
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    if (error.code === '23505') return res.status(409).json({ error: 'Email already exists' });
+    console.error('Employee update error:', error);
+    return res.status(500).json({ error: 'Failed to update employee' });
+  }
   if (!data) return res.status(404).json({ error: 'Employee not found' });
   res.json(data);
 });
@@ -58,7 +74,10 @@ router.delete('/:id', async (req, res) => {
     .from('employees')
     .delete()
     .eq('id', req.params.id);
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('Employee delete error:', error);
+    return res.status(500).json({ error: 'Failed to delete employee' });
+  }
   res.json({ success: true });
 });
 
