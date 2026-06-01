@@ -9,19 +9,6 @@ const EMPTY_FORM = {
   password: '',
 };
 
-const th = { padding: '10px 16px', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.07em', color: 'var(--ink-3)', textTransform: 'uppercase', textAlign: 'left', borderBottom: '1px solid var(--line)', background: 'var(--bg-2)', fontWeight: '500' };
-const td = { padding: '12px 16px', fontSize: '13px', color: 'var(--ink)', borderBottom: '1px solid var(--line-2)', verticalAlign: 'middle' };
-
-const inputStyle = {
-  width: '100%', padding: '9px 12px', border: '1px solid var(--line)', borderRadius: '2px',
-  fontSize: '13px', color: 'var(--ink)', background: 'var(--bg)', outline: 'none',
-  fontFamily: 'var(--font)', transition: 'border-color 0.15s',
-};
-const labelStyle = {
-  display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em',
-  color: 'var(--ink-2)', textTransform: 'uppercase', marginBottom: '5px',
-};
-
 function formatTime(t) {
   if (!t) return '—';
   const [h, m] = t.split(':').map(Number);
@@ -52,12 +39,10 @@ export default function Employees() {
   function openCreate() { setForm(EMPTY_FORM); setEditId(null); setError(''); setModal('create'); }
   function openEdit(emp) {
     setForm({
-      name: emp.name,
-      email: emp.email,
+      name: emp.name, email: emp.email,
       shift_start: emp.shift_start?.slice(0, 5) || '09:00',
       shift_end: emp.shift_end?.slice(0, 5) || '18:00',
-      work_days: emp.work_days || [],
-      password: '',
+      work_days: emp.work_days || [], password: '',
     });
     setEditId(emp.id); setError(''); setModal('edit');
   }
@@ -80,83 +65,98 @@ export default function Employees() {
   }
 
   async function handleDelete(id) {
-    setDeleteError('');
-    setDeleting(true);
+    setDeleteError(''); setDeleting(true);
     try {
       await api.verifyAdminPassword(deletePassword);
       await api.deleteEmployee(id);
-      setConfirmDelete(null);
-      setDeletePassword('');
-      load();
-    } catch (err) {
-      setDeleteError(err.message);
-    } finally {
-      setDeleting(false);
-    }
+      setConfirmDelete(null); setDeletePassword(''); load();
+    } catch (err) { setDeleteError(err.message); }
+    finally { setDeleting(false); }
   }
 
+  const overlayStyle = {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '24px',
+  };
+
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', gap: '12px', flexWrap: 'wrap' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }}>
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '32px', gap: '12px', flexWrap: 'wrap' }}>
         <div>
-          <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 4px' }}>Manage</p>
-          <h1 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--ink)', margin: 0 }}>Employees</h1>
+          <p style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 6px' }}>Manage</p>
+          <h1 style={{ fontSize: '22px', fontWeight: '600', color: 'var(--ink)', margin: 0, letterSpacing: '-0.01em' }}>Employees</h1>
         </div>
-        <button
-          onClick={openCreate}
-          style={{ padding: '9px 16px', border: '1px solid var(--ink)', background: 'var(--ink)', color: 'var(--bg)', fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '2px' }}
-        >
+        <button onClick={openCreate} className="btn-primary" style={{ padding: '9px 18px' }}>
           + Add Employee
         </button>
       </div>
 
-      <div style={{ border: '1px solid var(--line)', background: 'var(--bg)' }}>
-        <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '12px 16px' }}>
-          <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>
+      {/* Table panel */}
+      <div className="panel">
+        <div className="panel-header accent-bar">
+          <span className="panel-title">
             {loading ? '...' : `${employees.length} employee${employees.length !== 1 ? 's' : ''}`}
           </span>
         </div>
+
         {loading ? (
-          <p style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '13px', margin: 0 }}>Loading...</p>
+          <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>Loading...</p>
         ) : employees.length === 0 ? (
-          <p style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '13px', margin: 0 }}>No employees yet.</p>
+          <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>No employees yet.</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="dark-table">
               <thead>
-                <tr>{['Name', 'Email', 'Shift', 'Work Days', 'Password', 'Actions'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
+                <tr>{['Name', 'Email', 'Shift', 'Work Days', 'Password', 'Actions'].map(h => <th key={h}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {employees.map(emp => (
-                  <tr key={emp.id}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-2)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    style={{ transition: 'background 0.1s' }}
-                  >
-                    <td style={{ ...td, fontWeight: '500' }}>{emp.name}</td>
-                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{emp.email}</td>
-                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>
+                  <tr key={emp.id}>
+                    <td style={{ fontWeight: '500' }}>{emp.name}</td>
+                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{emp.email}</td>
+                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>
                       {formatTime(emp.shift_start)}
                       {emp.shift_end && <span style={{ color: 'var(--ink-3)', fontWeight: '400' }}> – {formatTime(emp.shift_end)}</span>}
                     </td>
-                    <td style={td}>
+                    <td>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                         {(emp.work_days || []).map(d => (
-                          <span key={d} style={{ fontSize: '10px', fontFamily: 'var(--mono)', border: '1px solid var(--line)', color: 'var(--ink-2)', padding: '1px 5px', letterSpacing: '0.04em' }}>
+                          <span key={d} style={{
+                            fontSize: '9px', fontFamily: 'var(--mono)', letterSpacing: '0.06em',
+                            padding: '2px 6px', borderRadius: '4px',
+                            background: 'var(--accent-dim)', color: 'var(--accent)',
+                            border: '1px solid rgba(0,229,160,0.2)',
+                          }}>
                             {d.slice(0, 3).toUpperCase()}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td style={td}>
-                      <span style={{ fontSize: '10px', fontFamily: 'var(--mono)', padding: '2px 6px', border: `1px solid ${emp.password_hash ? 'var(--present)' : 'var(--line)'}`, color: emp.password_hash ? 'var(--present)' : 'var(--ink-3)', letterSpacing: '0.04em' }}>
+                    <td>
+                      <span style={{
+                        fontSize: '10px', fontFamily: 'var(--mono)', letterSpacing: '0.06em',
+                        padding: '3px 8px', borderRadius: '4px',
+                        background: emp.password_hash ? 'var(--present-dim)' : 'rgba(139,144,160,0.08)',
+                        color: emp.password_hash ? 'var(--present)' : 'var(--ink-3)',
+                        border: `1px solid ${emp.password_hash ? 'rgba(0,229,160,0.25)' : 'rgba(139,144,160,0.15)'}`,
+                      }}>
                         {emp.password_hash ? 'SET' : 'NONE'}
                       </span>
                     </td>
-                    <td style={td}>
-                      <div style={{ display: 'flex', gap: '12px' }}>
-                        <button onClick={() => openEdit(emp)} style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--ink-2)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>Edit</button>
-                        <button onClick={() => setConfirmDelete(emp)} style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--absent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>Delete</button>
+                    <td>
+                      <div style={{ display: 'flex', gap: '16px' }}>
+                        <button onClick={() => openEdit(emp)} style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--ink-2)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, letterSpacing: '0.04em', transition: 'color 0.15s' }}
+                          onMouseEnter={e => e.target.style.color = 'var(--accent)'}
+                          onMouseLeave={e => e.target.style.color = 'var(--ink-2)'}>
+                          Edit
+                        </button>
+                        <button onClick={() => setConfirmDelete(emp)} style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--ink-3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, letterSpacing: '0.04em', transition: 'color 0.15s' }}
+                          onMouseEnter={e => e.target.style.color = 'var(--absent)'}
+                          onMouseLeave={e => e.target.style.color = 'var(--ink-3)'}>
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -169,56 +169,49 @@ export default function Employees() {
 
       {/* Create / Edit Modal */}
       {modal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '24px' }}>
-          <div style={{ background: 'var(--bg)', border: '1px solid var(--line)', width: '100%', maxWidth: '440px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>
-                {modal === 'create' ? 'Add Employee' : 'Edit Employee'}
-              </span>
-              <button onClick={() => setModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--ink-3)', lineHeight: 1 }}>×</button>
+        <div style={overlayStyle}>
+          <div className="panel" style={{ width: '100%', maxWidth: '460px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="panel-header" style={{ borderTop: `2px solid ${modal === 'create' ? 'var(--accent)' : 'var(--ink-2)'}` }}>
+              <span className="panel-title">{modal === 'create' ? 'Add Employee' : 'Edit Employee'}</span>
+              <button onClick={() => setModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--ink-3)', lineHeight: 1, padding: '0 4px', transition: 'color 0.15s' }}
+                onMouseEnter={e => e.target.style.color = 'var(--ink)'}
+                onMouseLeave={e => e.target.style.color = 'var(--ink-3)'}>
+                ×
+              </button>
             </div>
-            <form onSubmit={handleSave} style={{ padding: '20px' }}>
+            <form onSubmit={handleSave} style={{ padding: '24px 20px' }}>
               {[
                 { label: 'Full Name *', key: 'name', type: 'text', required: true },
                 { label: 'Work Email *', key: 'email', type: 'email', required: true },
               ].map(({ label, key, type, required }) => (
-                <div key={key} style={{ marginBottom: '14px' }}>
-                  <label style={labelStyle}>{label}</label>
+                <div key={key} style={{ marginBottom: '16px' }}>
+                  <label className="field-label">{label}</label>
                   <input type={type} required={required} value={form[key]}
                     onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                    style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
-                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
-                  />
+                    className="dark-input" />
                 </div>
               ))}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                 <div>
-                  <label style={labelStyle}>Shift Start *</label>
+                  <label className="field-label">Shift Start *</label>
                   <input type="time" required value={form.shift_start}
                     onChange={e => setForm(f => ({ ...f, shift_start: e.target.value }))}
-                    style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
-                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
-                  />
+                    className="dark-input" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Shift End *</label>
+                  <label className="field-label">Shift End *</label>
                   <input type="time" required value={form.shift_end}
                     onChange={e => setForm(f => ({ ...f, shift_end: e.target.value }))}
-                    style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = 'var(--ink)'}
-                    onBlur={e => e.target.style.borderColor = 'var(--line)'}
-                  />
+                    className="dark-input" />
                 </div>
               </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={labelStyle}>Work Days *</label>
+              <div style={{ marginBottom: '16px' }}>
+                <label className="field-label">Work Days *</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                   {DAYS.map(day => {
                     const on = form.work_days.includes(day);
                     return (
-                      <label key={day} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px 4px', border: `1px solid ${on ? 'var(--ink)' : 'var(--line)'}`, background: on ? 'var(--ink)' : 'var(--bg)', color: on ? 'var(--bg)' : 'var(--ink-2)', fontSize: '10px', fontFamily: 'var(--mono)', letterSpacing: '0.04em', cursor: 'pointer', transition: 'all 0.15s' }}>
+                      <label key={day} className={`day-toggle${on ? ' active' : ''}`}>
                         <input type="checkbox" className="sr-only" checked={on} onChange={() => toggleDay(day)} />
                         {day.slice(0, 3).toUpperCase()}
                       </label>
@@ -226,32 +219,21 @@ export default function Employees() {
                   })}
                 </div>
               </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={labelStyle}>
+              <div style={{ marginBottom: '22px' }}>
+                <label className="field-label">
                   {modal === 'edit' ? 'Reset Password' : 'Password'}
-                  <span style={{ color: 'var(--ink-3)', fontWeight: '400', marginLeft: '4px' }}>(optional — employee can set their own)</span>
+                  <span style={{ color: 'var(--ink-3)', fontWeight: '400', marginLeft: '6px', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
                 </label>
                 <input type="password" value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                  placeholder={modal === 'edit' ? 'Enter new password to reset' : 'Leave blank for employee to set'}
+                  placeholder={modal === 'edit' ? 'Enter new password to reset' : 'Leave blank — employee can set their own'}
                   minLength={6}
-                  style={inputStyle}
-                  onFocus={e => e.target.style.borderColor = 'var(--ink)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--line)'}
-                />
+                  className="dark-input" />
               </div>
-              {error && (
-                <div style={{ borderLeft: '2px solid var(--absent)', paddingLeft: '10px', marginBottom: '14px' }}>
-                  <p style={{ fontSize: '12px', color: 'var(--absent)', margin: 0 }}>{error}</p>
-                </div>
-              )}
+              {error && <div className="msg-error" style={{ marginBottom: '16px' }}><p>{error}</p></div>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <button type="button" onClick={() => setModal(null)}
-                  style={{ padding: '9px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink-2)', fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.04em', cursor: 'pointer', borderRadius: '2px' }}>
-                  Cancel
-                </button>
-                <button type="submit" disabled={saving}
-                  style={{ padding: '9px', border: '1px solid var(--ink)', background: saving ? 'var(--line)' : 'var(--ink)', color: saving ? 'var(--ink-3)' : 'var(--bg)', fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.04em', cursor: saving ? 'not-allowed' : 'pointer', borderRadius: '2px', fontWeight: '600' }}>
+                <button type="button" onClick={() => setModal(null)} className="btn-ghost">Cancel</button>
+                <button type="submit" disabled={saving} className="btn-primary">
                   {saving ? 'Saving...' : 'Save'}
                 </button>
               </div>
@@ -260,45 +242,35 @@ export default function Employees() {
         </div>
       )}
 
-      {/* Delete Confirm */}
+      {/* Delete Confirm Modal */}
       {confirmDelete && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '24px' }}>
-          <div style={{ background: 'var(--bg)', border: '1px solid var(--line)', width: '100%', maxWidth: '360px' }}>
-            <div style={{ borderTop: '2px solid var(--absent)', borderBottom: '1px solid var(--line)', padding: '14px 20px' }}>
-              <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--absent)', textTransform: 'uppercase' }}>Delete Employee</span>
+        <div style={overlayStyle}>
+          <div className="panel" style={{ width: '100%', maxWidth: '380px' }}>
+            <div className="panel-header" style={{ borderTop: '2px solid var(--absent)' }}>
+              <span className="panel-title" style={{ color: 'var(--absent)' }}>Delete Employee</span>
+              <button onClick={() => { setConfirmDelete(null); setDeletePassword(''); setDeleteError(''); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--ink-3)', lineHeight: 1, padding: '0 4px' }}>×</button>
             </div>
             <div style={{ padding: '20px' }}>
-              <p style={{ fontSize: '13px', color: 'var(--ink)', marginBottom: '6px' }}>
-                Delete <strong>{confirmDelete.name}</strong>?
+              <p style={{ fontSize: '14px', color: 'var(--ink)', marginBottom: '4px', fontWeight: '500' }}>
+                Delete <span style={{ color: 'var(--absent)' }}>{confirmDelete.name}</span>?
               </p>
-              <p style={{ fontSize: '12px', color: 'var(--ink-3)', marginBottom: '20px', fontFamily: 'var(--mono)' }}>
-                All attendance records will be removed.
+              <p style={{ fontSize: '12px', color: 'var(--ink-3)', marginBottom: '20px', fontFamily: 'var(--mono)', lineHeight: 1.6 }}>
+                All attendance records for this employee will be permanently removed.
               </p>
               <div style={{ marginBottom: '16px' }}>
-                <label style={labelStyle}>Manager Password</label>
-                <input
-                  type="password"
-                  value={deletePassword}
+                <label className="field-label">Manager Password</label>
+                <input type="password" value={deletePassword}
                   onChange={e => { setDeletePassword(e.target.value); setDeleteError(''); }}
-                  placeholder="Confirm with your password"
-                  autoFocus
-                  style={inputStyle}
-                  onFocus={e => e.target.style.borderColor = 'var(--absent)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--line)'}
-                />
+                  placeholder="Confirm with your password" autoFocus
+                  className="dark-input" />
               </div>
-              {deleteError && (
-                <div style={{ borderLeft: '2px solid var(--absent)', paddingLeft: '10px', marginBottom: '14px' }}>
-                  <p style={{ fontSize: '12px', color: 'var(--absent)', margin: 0 }}>{deleteError}</p>
-                </div>
-              )}
+              {deleteError && <div className="msg-error" style={{ marginBottom: '14px' }}><p>{deleteError}</p></div>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <button onClick={() => { setConfirmDelete(null); setDeletePassword(''); setDeleteError(''); }}
-                  style={{ padding: '9px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink-2)', fontSize: '12px', fontFamily: 'var(--mono)', cursor: 'pointer', borderRadius: '2px' }}>
+                <button onClick={() => { setConfirmDelete(null); setDeletePassword(''); setDeleteError(''); }} className="btn-ghost">
                   Cancel
                 </button>
-                <button onClick={() => handleDelete(confirmDelete.id)} disabled={deleting || !deletePassword}
-                  style={{ padding: '9px', border: '1px solid var(--absent)', background: (deleting || !deletePassword) ? 'var(--line)' : 'var(--absent)', color: (deleting || !deletePassword) ? 'var(--ink-3)' : '#fff', fontSize: '12px', fontFamily: 'var(--mono)', cursor: (deleting || !deletePassword) ? 'not-allowed' : 'pointer', borderRadius: '2px', fontWeight: '600' }}>
+                <button onClick={() => handleDelete(confirmDelete.id)} disabled={deleting || !deletePassword} className="btn-danger">
                   {deleting ? 'Verifying...' : 'Delete'}
                 </button>
               </div>

@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import StatusBadge from '../../components/StatusBadge';
 
-const th = { padding: '10px 16px', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.07em', color: 'var(--ink-3)', textTransform: 'uppercase', textAlign: 'left', borderBottom: '1px solid var(--line)', background: 'var(--bg-2)', fontWeight: '500' };
-const td = { padding: '12px 16px', fontSize: '13px', color: 'var(--ink)', borderBottom: '1px solid var(--line-2)', verticalAlign: 'middle' };
+function formatTime(t) {
+  if (!t) return '—';
+  const [h, m] = t.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+}
 
 export default function Dashboard() {
   const [records, setRecords] = useState([]);
@@ -31,80 +34,86 @@ export default function Dashboard() {
     Absent: records.filter(r => r.status === 'Absent').length,
   };
 
-  function formatTime(t) {
-    if (!t) return '—';
-    const [h, m] = t.split(':').map(Number);
-    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
-  }
+  const stats = [
+    { label: 'Total', value: employees.length, color: 'var(--ink)', accentColor: 'var(--accent)' },
+    { label: 'Present', value: counts.Present, color: 'var(--present)', accentColor: 'var(--present)' },
+    { label: 'Late', value: counts.Late, color: 'var(--late)', accentColor: 'var(--late)' },
+    { label: 'Absent', value: counts.Absent, color: 'var(--absent)', accentColor: 'var(--absent)' },
+  ];
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
-      <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 4px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }}>
+
+      {/* Page header */}
+      <div style={{ marginBottom: '32px' }}>
+        <p style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 6px' }}>
           Overview
         </p>
-        <h1 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>Dashboard</h1>
-        <p style={{ fontSize: '13px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>{todayLabel}</p>
+        <h1 style={{ fontSize: '22px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 4px', letterSpacing: '-0.01em' }}>Dashboard</h1>
+        <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)', letterSpacing: '0.04em' }}>{todayLabel}</p>
       </div>
 
-      {/* Stat row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1px', background: 'var(--line)', border: '1px solid var(--line)', marginBottom: '24px' }}
-        className="sm:grid-cols-4"
-      >
-        {[
-          { label: 'Total', value: employees.length, color: 'var(--ink)' },
-          { label: 'Present', value: counts.Present, color: 'var(--present)' },
-          { label: 'Late', value: counts.Late, color: 'var(--late)' },
-          { label: 'Absent', value: counts.Absent, color: 'var(--absent)' },
-        ].map(({ label, value, color }) => (
-          <div key={label} style={{ background: 'var(--bg)', padding: '20px 20px 18px' }}>
-            <p style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.07em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 8px' }}>{label}</p>
-            <p style={{ fontSize: '36px', fontWeight: '600', color, margin: 0, fontFamily: 'var(--mono)', lineHeight: 1 }}>
+      {/* Stat cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '24px' }}
+        className="sm:grid-cols-4">
+        {stats.map(({ label, value, color, accentColor }) => (
+          <div key={label} className="stat-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <p style={{ fontSize: '10px', fontFamily: 'var(--mono)', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: 0 }}>{label}</p>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, display: 'block', marginTop: '2px', boxShadow: `0 0 8px ${accentColor}` }} />
+            </div>
+            <p style={{ fontSize: '40px', fontWeight: '600', color, margin: 0, fontFamily: 'var(--mono)', lineHeight: 1, letterSpacing: '-0.02em' }}>
               {loading ? '—' : value}
             </p>
           </div>
         ))}
       </div>
 
-      {/* Table */}
-      <div style={{ border: '1px solid var(--line)', background: 'var(--bg)' }}>
-        <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '12px 16px' }}>
-          <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>
-            Today's Attendance
-          </span>
+      {/* Attendance table */}
+      <div className="panel">
+        <div className="panel-header accent-bar">
+          <span className="panel-title">Today's Attendance</span>
         </div>
+
         {loading ? (
-          <p style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '13px', margin: 0 }}>Loading...</p>
+          <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0, letterSpacing: '0.06em' }}>
+            Loading records...
+          </p>
         ) : records.length === 0 ? (
-          <p style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '13px', margin: 0 }}>No records for today.</p>
+          <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>
+            No records for today.
+          </p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="dark-table">
               <thead>
                 <tr>
                   {['Employee', 'Schedule', 'Time In', 'Time Out', 'Location', 'Status'].map(h => (
-                    <th key={h} style={th}>{h}</th>
+                    <th key={h}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {records.map(r => (
-                  <tr key={r.id} style={{ transition: 'background 0.1s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-2)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={td}>
-                      <p style={{ margin: '0 0 1px', fontWeight: '500' }}>{r.employees?.name}</p>
-                      <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>{r.employees?.email}</p>
+                  <tr key={r.id}>
+                    <td>
+                      <p style={{ margin: '0 0 2px', fontWeight: '500', color: 'var(--ink)' }}>{r.employees?.name}</p>
+                      <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', letterSpacing: '0.03em' }}>{r.employees?.email}</p>
                     </td>
-                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px' }}>
+                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>
                       {formatTime(r.employees?.shift_start)}
                       {r.employees?.shift_end && <span style={{ color: 'var(--ink-3)' }}> – {formatTime(r.employees.shift_end)}</span>}
                     </td>
-                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>{r.status === 'On Leave' ? 'N/A' : formatTime(r.time_in)}</td>
-                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{r.status === 'On Leave' ? 'N/A' : formatTime(r.time_out)}</td>
-                    <td style={{ ...td, color: 'var(--ink-2)', fontSize: '12px' }}>{r.status === 'On Leave' ? 'N/A' : (r.work_location || '—')}</td>
-                    <td style={td}><StatusBadge status={r.status} /></td>
+                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500', color: 'var(--ink)' }}>
+                      {r.status === 'On Leave' ? <span style={{ color: 'var(--ink-3)' }}>N/A</span> : formatTime(r.time_in)}
+                    </td>
+                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>
+                      {r.status === 'On Leave' ? <span style={{ color: 'var(--ink-3)' }}>N/A</span> : formatTime(r.time_out)}
+                    </td>
+                    <td style={{ fontSize: '12px', color: 'var(--ink-2)' }}>
+                      {r.status === 'On Leave' ? <span style={{ color: 'var(--ink-3)' }}>N/A</span> : (r.work_location || '—')}
+                    </td>
+                    <td><StatusBadge status={r.status} /></td>
                   </tr>
                 ))}
               </tbody>

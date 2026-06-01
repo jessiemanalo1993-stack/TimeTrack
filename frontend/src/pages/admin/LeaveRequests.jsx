@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import StatusBadge from '../../components/StatusBadge';
 
-const th = { padding: '10px 16px', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.07em', color: 'var(--ink-3)', textTransform: 'uppercase', textAlign: 'left', borderBottom: '1px solid var(--line)', background: 'var(--bg-2)', fontWeight: '500' };
-const td = { padding: '11px 16px', fontSize: '13px', color: 'var(--ink)', borderBottom: '1px solid var(--line-2)', verticalAlign: 'middle' };
-const selectStyle = { padding: '8px 12px', border: '1px solid var(--line)', borderRadius: '2px', fontSize: '13px', color: 'var(--ink)', background: 'var(--bg)', fontFamily: 'var(--font)', outline: 'none' };
+const selectStyle = {
+  padding: '8px 12px', border: '1px solid var(--line)', borderRadius: '8px',
+  fontSize: '12px', color: 'var(--ink)', background: 'var(--surface)',
+  fontFamily: 'var(--mono)', outline: 'none', letterSpacing: '0.03em',
+  cursor: 'pointer', transition: 'border-color 0.15s',
+};
 
 export default function LeaveRequests() {
   const [requests, setRequests] = useState([]);
@@ -12,20 +15,16 @@ export default function LeaveRequests() {
   const [statusFilter, setStatusFilter] = useState('');
   const [employeeFilter, setEmployeeFilter] = useState('');
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(null); // id of request being actioned
+  const [actionLoading, setActionLoading] = useState(null);
 
-  useEffect(() => {
-    api.getEmployees().then(setEmployees);
-  }, []);
+  useEffect(() => { api.getEmployees().then(setEmployees); }, []);
 
   useEffect(() => {
     setLoading(true);
     const params = {};
     if (statusFilter) params.status = statusFilter;
     if (employeeFilter) params.employee_id = employeeFilter;
-    api.getLeaveRequests(params)
-      .then(setRequests)
-      .finally(() => setLoading(false));
+    api.getLeaveRequests(params).then(setRequests).finally(() => setLoading(false));
   }, [statusFilter, employeeFilter]);
 
   async function handleApprove(id) {
@@ -33,11 +32,8 @@ export default function LeaveRequests() {
     try {
       const updated = await api.approveLeave(id);
       setRequests(prev => prev.map(r => r.id === id ? { ...r, ...updated } : r));
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setActionLoading(null);
-    }
+    } catch (err) { alert(err.message); }
+    finally { setActionLoading(null); }
   }
 
   async function handleReject(id) {
@@ -45,11 +41,8 @@ export default function LeaveRequests() {
     try {
       const updated = await api.rejectLeave(id);
       setRequests(prev => prev.map(r => r.id === id ? { ...r, ...updated } : r));
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setActionLoading(null);
-    }
+    } catch (err) { alert(err.message); }
+    finally { setActionLoading(null); }
   }
 
   const counts = {
@@ -59,24 +52,48 @@ export default function LeaveRequests() {
     Rejected: requests.filter(r => r.status === 'Rejected').length,
   };
 
+  const stats = [
+    { label: 'Total', value: counts.total, color: 'var(--ink)', accent: 'var(--accent)' },
+    { label: 'Pending', value: counts.Pending, color: 'var(--late)', accent: 'var(--late)' },
+    { label: 'Approved', value: counts.Approved, color: 'var(--present)', accent: 'var(--present)' },
+    { label: 'Rejected', value: counts.Rejected, color: 'var(--absent)', accent: 'var(--absent)' },
+  ];
+
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }}>
+
       {/* Header */}
-      <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 4px' }}>Approvals</p>
-        <h1 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>Leave Requests</h1>
-        <p style={{ fontSize: '13px', color: 'var(--ink-3)', margin: 0 }}>Review and approve employee leave requests.</p>
+      <div style={{ marginBottom: '32px' }}>
+        <p style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 6px' }}>Approvals</p>
+        <h1 style={{ fontSize: '22px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 6px', letterSpacing: '-0.01em' }}>Leave Requests</h1>
+        <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>Review and approve employee leave requests.</p>
       </div>
 
-      {/* Filters */}
-      <div style={{ border: '1px solid var(--line)', background: 'var(--bg)', marginBottom: '20px' }}>
-        <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '12px 16px' }}>
-          <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>Filters</span>
+      {/* Stat cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '24px' }}
+        className="sm:grid-cols-4">
+        {stats.map(({ label, value, color, accent }) => (
+          <div key={label} className="stat-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+              <p style={{ fontSize: '10px', fontFamily: 'var(--mono)', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: 0 }}>{label}</p>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: accent, flexShrink: 0, marginTop: '2px', boxShadow: `0 0 8px ${accent}` }} />
+            </div>
+            <p style={{ fontSize: '36px', fontWeight: '600', color, margin: 0, fontFamily: 'var(--mono)', lineHeight: 1, letterSpacing: '-0.02em' }}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters panel */}
+      <div className="panel" style={{ marginBottom: '20px' }}>
+        <div className="panel-header accent-bar">
+          <span className="panel-title">Filters</span>
         </div>
-        <div style={{ padding: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+        <div style={{ padding: '16px 20px', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '4px' }}>Status</label>
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={selectStyle}>
+            <label className="field-label">Status</label>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={selectStyle}
+              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+              onBlur={e => e.target.style.borderColor = 'var(--line)'}>
               <option value="">All Statuses</option>
               <option value="Pending">Pending</option>
               <option value="Approved">Approved</option>
@@ -84,8 +101,10 @@ export default function LeaveRequests() {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '4px' }}>Employee</label>
-            <select value={employeeFilter} onChange={e => setEmployeeFilter(e.target.value)} style={selectStyle}>
+            <label className="field-label">Employee</label>
+            <select value={employeeFilter} onChange={e => setEmployeeFilter(e.target.value)} style={selectStyle}
+              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+              onBlur={e => e.target.style.borderColor = 'var(--line)'}>
               <option value="">All Employees</option>
               {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
@@ -93,40 +112,22 @@ export default function LeaveRequests() {
         </div>
       </div>
 
-      {/* Summary counts */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1px', background: 'var(--line)', border: '1px solid var(--line)', marginBottom: '16px' }}
-        className="sm:grid-cols-4">
-        {[
-          { label: 'Total', value: counts.total, color: 'var(--ink)' },
-          { label: 'Pending', value: counts.Pending, color: 'var(--late)' },
-          { label: 'Approved', value: counts.Approved, color: 'var(--present)' },
-          { label: 'Rejected', value: counts.Rejected, color: 'var(--absent)' },
-        ].map(({ label, value, color }) => (
-          <div key={label} style={{ background: 'var(--bg)', padding: '12px 20px' }}>
-            <p style={{ fontSize: '10px', fontFamily: 'var(--mono)', letterSpacing: '0.07em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 4px' }}>{label}</p>
-            <p style={{ fontSize: '24px', fontWeight: '600', color, margin: 0, fontFamily: 'var(--mono)', lineHeight: 1 }}>{value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Table */}
-      <div style={{ border: '1px solid var(--line)', background: 'var(--bg)' }}>
-        <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '12px 16px' }}>
-          <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>
-            Leave Requests
-          </span>
+      {/* Table panel */}
+      <div className="panel">
+        <div className="panel-header accent-bar">
+          <span className="panel-title">Leave Requests</span>
         </div>
         {loading ? (
-          <p style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '13px', margin: 0 }}>Loading...</p>
+          <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>Loading...</p>
         ) : requests.length === 0 ? (
-          <p style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '13px', margin: 0 }}>No leave requests found.</p>
+          <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>No leave requests found.</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="dark-table">
               <thead>
                 <tr>
                   {['Employee', 'Date', 'Day', 'Leave Type', 'Reason', 'Filed On', 'Status', 'Actions'].map(h => (
-                    <th key={h} style={th}>{h}</th>
+                    <th key={h}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -138,40 +139,40 @@ export default function LeaveRequests() {
                   const isPending = r.status === 'Pending';
                   const isActioning = actionLoading === r.id;
                   return (
-                    <tr key={r.id}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-2)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      style={{ transition: 'background 0.1s' }}
-                    >
-                      <td style={td}>
-                        <p style={{ margin: '0 0 1px', fontWeight: '500' }}>{r.employees?.name}</p>
+                    <tr key={r.id}>
+                      <td>
+                        <p style={{ margin: '0 0 2px', fontWeight: '500', color: 'var(--ink)' }}>{r.employees?.name}</p>
                         <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>{r.employees?.email}</p>
                       </td>
-                      <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px' }}>{r.date}</td>
-                      <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{dayName}</td>
-                      <td style={{ ...td, fontSize: '12px' }}>{r.leave_type}</td>
-                      <td style={{ ...td, fontSize: '12px', color: 'var(--ink-2)', maxWidth: '160px' }}>
+                      <td style={{ fontFamily: 'var(--mono)', fontSize: '12px' }}>{r.date}</td>
+                      <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{dayName}</td>
+                      <td style={{ fontSize: '12px' }}>{r.leave_type}</td>
+                      <td style={{ fontSize: '12px', color: 'var(--ink-2)', maxWidth: '160px' }}>
                         <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {r.reason || '—'}
                         </span>
                       </td>
-                      <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{filedOn}</td>
-                      <td style={td}><StatusBadge status={r.status} /></td>
-                      <td style={td}>
+                      <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{filedOn}</td>
+                      <td><StatusBadge status={r.status} /></td>
+                      <td>
                         {isPending ? (
                           <div style={{ display: 'flex', gap: '6px' }}>
-                            <button
-                              onClick={() => handleApprove(r.id)}
-                              disabled={isActioning}
-                              style={{ padding: '5px 10px', border: '1px solid var(--present)', background: 'var(--bg)', color: 'var(--present)', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.04em', textTransform: 'uppercase', cursor: isActioning ? 'not-allowed' : 'pointer', borderRadius: '2px', opacity: isActioning ? 0.5 : 1 }}
-                            >
+                            <button onClick={() => handleApprove(r.id)} disabled={isActioning} style={{
+                              padding: '4px 12px', border: '1px solid rgba(0,229,160,0.3)', borderRadius: '6px',
+                              background: 'var(--present-dim)', color: 'var(--present)',
+                              fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.05em',
+                              cursor: isActioning ? 'not-allowed' : 'pointer', opacity: isActioning ? 0.5 : 1,
+                              transition: 'all 0.15s',
+                            }}>
                               {isActioning ? '...' : 'Approve'}
                             </button>
-                            <button
-                              onClick={() => handleReject(r.id)}
-                              disabled={isActioning}
-                              style={{ padding: '5px 10px', border: '1px solid var(--absent)', background: 'var(--bg)', color: 'var(--absent)', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.04em', textTransform: 'uppercase', cursor: isActioning ? 'not-allowed' : 'pointer', borderRadius: '2px', opacity: isActioning ? 0.5 : 1 }}
-                            >
+                            <button onClick={() => handleReject(r.id)} disabled={isActioning} style={{
+                              padding: '4px 12px', border: '1px solid rgba(244,63,94,0.3)', borderRadius: '6px',
+                              background: 'var(--absent-dim)', color: 'var(--absent)',
+                              fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.05em',
+                              cursor: isActioning ? 'not-allowed' : 'pointer', opacity: isActioning ? 0.5 : 1,
+                              transition: 'all 0.15s',
+                            }}>
                               Reject
                             </button>
                           </div>

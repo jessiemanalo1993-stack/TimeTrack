@@ -2,9 +2,18 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import StatusBadge from '../../components/StatusBadge';
 
-const th = { padding: '10px 16px', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.07em', color: 'var(--ink-3)', textTransform: 'uppercase', textAlign: 'left', borderBottom: '1px solid var(--line)', background: 'var(--bg-2)', fontWeight: '500' };
-const td = { padding: '11px 16px', fontSize: '13px', color: 'var(--ink)', borderBottom: '1px solid var(--line-2)', verticalAlign: 'middle' };
-const selectStyle = { padding: '8px 12px', border: '1px solid var(--line)', borderRadius: '2px', fontSize: '13px', color: 'var(--ink)', background: 'var(--bg)', fontFamily: 'var(--font)', outline: 'none' };
+const selectStyle = {
+  padding: '8px 12px', border: '1px solid var(--line)', borderRadius: '8px',
+  fontSize: '12px', color: 'var(--ink)', background: 'var(--surface)',
+  fontFamily: 'var(--mono)', outline: 'none', letterSpacing: '0.03em',
+  cursor: 'pointer', transition: 'border-color 0.15s',
+};
+
+function formatTime(t) {
+  if (!t) return '—';
+  const [h, m] = t.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+}
 
 export default function Reports() {
   const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
@@ -50,12 +59,6 @@ export default function Reports() {
     finally { setDownloading(false); }
   }
 
-  function formatTime(t) {
-    if (!t) return '—';
-    const [h, m] = t.split(':').map(Number);
-    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
-  }
-
   const counts = {
     Present: preview.filter(r => r.status === 'Present').length,
     Late: preview.filter(r => r.status === 'Late').length,
@@ -70,79 +73,81 @@ export default function Reports() {
       if (employeeFilter) params.employee_id = employeeFilter;
       if (emailSubject.trim()) params.subject = emailSubject.trim();
       if (emailRecipient) params.recipient_id = emailRecipient;
-      const result = await api.sendReport(params);
-      setSendResult(result);
-    } catch (err) {
-      setSendError(err.message);
-    } finally { setSending(false); }
+      setSendResult(await api.sendReport(params));
+    } catch (err) { setSendError(err.message); }
+    finally { setSending(false); }
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
-      <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 4px' }}>Export</p>
-        <h1 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 2px' }}>Reports</h1>
-        <p style={{ fontSize: '13px', color: 'var(--ink-3)', margin: 0 }}>Generate and download attendance reports as Excel files.</p>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px' }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: '32px' }}>
+        <p style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 6px' }}>Export</p>
+        <h1 style={{ fontSize: '22px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 6px', letterSpacing: '-0.01em' }}>Reports</h1>
+        <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>Generate and download attendance reports as Excel files.</p>
       </div>
 
-      {/* Filters */}
-      <div style={{ border: '1px solid var(--line)', background: 'var(--bg)', marginBottom: '20px' }}>
-        <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '12px 16px' }}>
-          <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>Filters</span>
+      {/* Filters panel */}
+      <div className="panel" style={{ marginBottom: '24px' }}>
+        <div className="panel-header accent-bar">
+          <span className="panel-title">Filters</span>
         </div>
-        <form onSubmit={handleSearch} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
-          {[
-            { label: 'From', value: dateFrom, set: setDateFrom },
-            { label: 'To', value: dateTo, set: setDateTo },
-          ].map(({ label, value, set }) => (
-            <div key={label}>
-              <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '4px' }}>{label}</label>
-              <input type="date" value={value} onChange={e => set(e.target.value)}
-                style={{ ...selectStyle, padding: '8px 10px' }}
-                onFocus={e => e.target.style.borderColor = 'var(--ink)'}
-                onBlur={e => e.target.style.borderColor = 'var(--line)'}
-              />
+        <form onSubmit={handleSearch} style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end', marginBottom: '16px' }}>
+            {[
+              { label: 'From', value: dateFrom, set: setDateFrom },
+              { label: 'To', value: dateTo, set: setDateTo },
+            ].map(({ label, value, set }) => (
+              <div key={label}>
+                <label className="field-label">{label}</label>
+                <input type="date" value={value} onChange={e => set(e.target.value)}
+                  style={selectStyle}
+                  onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--line)'}
+                />
+              </div>
+            ))}
+            <div>
+              <label className="field-label">Employee</label>
+              <select value={employeeFilter} onChange={e => setEmployeeFilter(e.target.value)} style={selectStyle}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                onBlur={e => e.target.style.borderColor = 'var(--line)'}>
+                <option value="">All Employees</option>
+                {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+              </select>
             </div>
-          ))}
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '4px' }}>Employee</label>
-            <select value={employeeFilter} onChange={e => setEmployeeFilter(e.target.value)} style={selectStyle}>
-              <option value="">All Employees</option>
-              {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-            </select>
-          </div>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          <button type="submit"
-            style={{ padding: '9px 16px', border: '1px solid var(--ink)', background: 'var(--ink)', color: 'var(--bg)', fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '2px' }}>
-            Preview
-          </button>
-          {searched && preview.length > 0 && (
-            <button type="button" onClick={handleDownload} disabled={downloading}
-              style={{ padding: '9px 16px', border: '1px solid var(--present)', background: 'var(--bg)', color: 'var(--present)', fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: downloading ? 'not-allowed' : 'pointer', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ↓ {downloading ? 'Downloading...' : 'Download Excel'}
+            <button type="submit" className="btn-primary" style={{ padding: '9px 20px' }}>
+              Preview
             </button>
-          )}
+            {searched && preview.length > 0 && (
+              <button type="button" onClick={handleDownload} disabled={downloading} className="btn-ghost" style={{ padding: '9px 20px' }}>
+                ↓ {downloading ? 'Downloading...' : 'Download Excel'}
+              </button>
+            )}
           </div>
         </form>
       </div>
 
-      {/* Summary row */}
+      {/* Summary stats */}
       {searched && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1px', background: 'var(--line)', border: '1px solid var(--line)', marginBottom: '16px' }}
-          className="sm:grid-cols-5"
-        >
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}
+          className="sm:grid-cols-5">
           {[
-            { label: 'Total', value: preview.length, color: 'var(--ink)' },
-            { label: 'Present', value: counts.Present, color: 'var(--present)' },
-            { label: 'Late', value: counts.Late, color: 'var(--late)' },
-            { label: 'Absent', value: counts.Absent, color: 'var(--absent)' },
-            { label: 'On Leave', value: counts['On Leave'], color: '#4338ca' },
-          ].map(({ label, value, color }) => (
-            <div key={label} style={{ background: 'var(--bg)', padding: '12px 20px', flex: 1 }}>
-              <p style={{ fontSize: '10px', fontFamily: 'var(--mono)', letterSpacing: '0.07em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 4px' }}>{label}</p>
-              <p style={{ fontSize: '24px', fontWeight: '600', color, margin: 0, fontFamily: 'var(--mono)', lineHeight: 1 }}>{value}</p>
+            { label: 'Total', value: preview.length, color: 'var(--ink)', accent: 'var(--accent)' },
+            { label: 'Present', value: counts.Present, color: 'var(--present)', accent: 'var(--present)' },
+            { label: 'Late', value: counts.Late, color: 'var(--late)', accent: 'var(--late)' },
+            { label: 'Absent', value: counts.Absent, color: 'var(--absent)', accent: 'var(--absent)' },
+            { label: 'On Leave', value: counts['On Leave'], color: 'var(--on-leave)', accent: 'var(--on-leave)' },
+          ].map(({ label, value, color, accent }) => (
+            <div key={label} className="stat-card" style={{ padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                <p style={{ fontSize: '9px', fontFamily: 'var(--mono)', letterSpacing: '0.1em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: 0 }}>{label}</p>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: accent, flexShrink: 0, marginTop: '2px' }} />
+              </div>
+              <p style={{ fontSize: '28px', fontWeight: '600', color, margin: 0, fontFamily: 'var(--mono)', lineHeight: 1 }}>{value}</p>
             </div>
           ))}
         </div>
@@ -150,46 +155,46 @@ export default function Reports() {
 
       {/* Preview table */}
       {searched && (
-        <div style={{ border: '1px solid var(--line)', background: 'var(--bg)' }}>
-          <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '12px 16px' }}>
-            <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>
-              Preview — {dateFrom} to {dateTo}
-            </span>
+        <div className="panel" style={{ marginBottom: '20px' }}>
+          <div className="panel-header accent-bar">
+            <span className="panel-title">Preview — {dateFrom}{dateFrom !== dateTo ? ` to ${dateTo}` : ''}</span>
           </div>
           {loading ? (
-            <p style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '13px', margin: 0 }}>Loading...</p>
+            <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>Loading...</p>
           ) : preview.length === 0 ? (
-            <p style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '13px', margin: 0 }}>No records found for the selected range.</p>
+            <p style={{ padding: '48px', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: '12px', margin: 0 }}>No records found for the selected range.</p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table className="dark-table">
                 <thead>
-                  <tr>{['Employee', 'Date', 'Day', 'Schedule', 'Time In', 'Time Out', 'Location', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr>
+                  <tr>{['Employee', 'Date', 'Day', 'Schedule', 'Time In', 'Time Out', 'Location', 'Status'].map(h => <th key={h}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {preview.map(r => {
                     const dateObj = new Date(r.date + 'T12:00:00');
                     const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
                     return (
-                      <tr key={r.id}
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-2)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                        style={{ transition: 'background 0.1s' }}
-                      >
-                        <td style={td}>
-                          <p style={{ margin: '0 0 1px', fontWeight: '500' }}>{r.employees?.name}</p>
+                      <tr key={r.id}>
+                        <td>
+                          <p style={{ margin: '0 0 2px', fontWeight: '500', color: 'var(--ink)' }}>{r.employees?.name}</p>
                           <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>{r.employees?.email}</p>
                         </td>
-                        <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px' }}>{r.date}</td>
-                        <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{dayName}</td>
-                        <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>
+                        <td style={{ fontFamily: 'var(--mono)', fontSize: '12px' }}>{r.date}</td>
+                        <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{dayName}</td>
+                        <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>
                           {formatTime(r.employees?.shift_start)}
                           {r.employees?.shift_end && <span> – {formatTime(r.employees.shift_end)}</span>}
                         </td>
-                        <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>{r.status === 'On Leave' ? 'N/A' : formatTime(r.time_in)}</td>
-                        <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>{r.status === 'On Leave' ? 'N/A' : formatTime(r.time_out)}</td>
-                        <td style={{ ...td, fontSize: '12px', color: 'var(--ink-2)' }}>{r.status === 'On Leave' ? 'N/A' : (r.work_location || '—')}</td>
-                        <td style={td}><StatusBadge status={r.status} /></td>
+                        <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: '500' }}>
+                          {r.status === 'On Leave' ? <span style={{ color: 'var(--ink-3)' }}>N/A</span> : formatTime(r.time_in)}
+                        </td>
+                        <td style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink-2)' }}>
+                          {r.status === 'On Leave' ? <span style={{ color: 'var(--ink-3)' }}>N/A</span> : formatTime(r.time_out)}
+                        </td>
+                        <td style={{ fontSize: '12px', color: 'var(--ink-2)' }}>
+                          {r.status === 'On Leave' ? <span style={{ color: 'var(--ink-3)' }}>N/A</span> : (r.work_location || '—')}
+                        </td>
+                        <td><StatusBadge status={r.status} /></td>
                       </tr>
                     );
                   })}
@@ -202,54 +207,42 @@ export default function Reports() {
 
       {/* Send Email panel */}
       {searched && preview.length > 0 && (
-        <div style={{ border: '1px solid var(--line)', background: 'var(--bg)', marginTop: '20px' }}>
-          <div style={{ borderTop: '2px solid var(--ink)', borderBottom: '1px solid var(--line)', padding: '12px 16px' }}>
-            <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.08em', color: 'var(--ink-2)', textTransform: 'uppercase' }}>Send Report by Email</span>
+        <div className="panel">
+          <div className="panel-header accent-bar">
+            <span className="panel-title">Send Report by Email</span>
           </div>
-          <div style={{ padding: '16px' }}>
-            <p style={{ margin: '0 0 14px', fontSize: '13px', color: 'var(--ink-3)' }}>
+          <div style={{ padding: '20px' }}>
+            <p style={{ margin: '0 0 16px', fontSize: '12px', color: 'var(--ink-3)', fontFamily: 'var(--mono)', lineHeight: 1.6 }}>
               Send the Excel report by email. Leave recipient blank to send to all employees.
             </p>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div style={{ minWidth: '180px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '4px' }}>Recipient</label>
-                <select value={emailRecipient} onChange={e => setEmailRecipient(e.target.value)} style={selectStyle}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '16px' }}>
+              <div>
+                <label className="field-label">Recipient</label>
+                <select value={emailRecipient} onChange={e => setEmailRecipient(e.target.value)} style={{ ...selectStyle, minWidth: '180px' }}
+                  onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--line)'}>
                   <option value="">All Employees</option>
                   {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                 </select>
               </div>
               <div style={{ flex: 1, minWidth: '240px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: '4px' }}>Subject (optional)</label>
-                <input
-                  type="text"
-                  value={emailSubject}
+                <label className="field-label">Subject (optional)</label>
+                <input type="text" value={emailSubject}
                   onChange={e => setEmailSubject(e.target.value)}
                   placeholder={`Attendance Report — ${dateFrom === dateTo ? dateFrom : dateFrom + ' to ' + dateTo}`}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--line)', borderRadius: '2px', fontSize: '13px', color: 'var(--ink)', background: 'var(--bg)', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' }}
-                  onFocus={e => e.target.style.borderColor = 'var(--ink)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--line)'}
-                />
+                  className="dark-input" />
               </div>
-              <button
-                type="button"
-                onClick={handleSendEmail}
-                disabled={sending}
-                style={{ padding: '9px 16px', border: '1px solid var(--ink)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '12px', fontFamily: 'var(--mono)', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: sending ? 'not-allowed' : 'pointer', borderRadius: '2px', whiteSpace: 'nowrap' }}
-              >
-                ✉ {sending ? 'Sending...' : emailRecipient ? 'Send to Employee' : 'Send to All Employees'}
+              <button type="button" onClick={handleSendEmail} disabled={sending} className="btn-primary" style={{ padding: '9px 20px', whiteSpace: 'nowrap' }}>
+                ✉ {sending ? 'Sending...' : emailRecipient ? 'Send to Employee' : 'Send to All'}
               </button>
             </div>
             {sendResult && (
-              <div style={{ marginTop: '12px', borderLeft: '2px solid var(--present)', paddingLeft: '10px' }}>
-                <p style={{ margin: 0, fontSize: '13px', color: 'var(--present)', fontFamily: 'var(--mono)' }}>
-                  Sent to {sendResult.sent_to} recipient{sendResult.sent_to !== 1 ? 's' : ''}.
-                </p>
+              <div className="msg-success">
+                <p>Sent to {sendResult.sent_to} recipient{sendResult.sent_to !== 1 ? 's' : ''}.</p>
               </div>
             )}
             {sendError && (
-              <div style={{ marginTop: '12px', borderLeft: '2px solid var(--absent)', paddingLeft: '10px' }}>
-                <p style={{ margin: 0, fontSize: '13px', color: 'var(--absent)' }}>{sendError}</p>
-              </div>
+              <div className="msg-error"><p>{sendError}</p></div>
             )}
           </div>
         </div>
