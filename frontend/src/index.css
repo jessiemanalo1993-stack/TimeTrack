@@ -211,6 +211,7 @@ input, select, textarea, button { font-family: var(--font); }
 /* ── Tab group ── */
 .tab-group {
   display: flex;
+  justify-content: center;
   gap: 4px;
   padding: 4px;
   background: var(--base-2);

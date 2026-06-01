@@ -83,7 +83,7 @@ export default function Employees() {
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '32px', gap: '12px', flexWrap: 'wrap' }}>
         <div>
           <p style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 6px' }}>Manage</p>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--ink)', margin: 0, letterSpacing: '-0.02em' }}>Employees</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#ffffff', margin: 0, letterSpacing: '-0.02em' }}>Employees</h1>
         </div>
         <button onClick={openCreate} className="btn-primary" style={{ width: 'auto', padding: '10px 22px' }}>
           + Add Employee

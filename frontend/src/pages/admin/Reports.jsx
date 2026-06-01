@@ -80,7 +80,7 @@ export default function Reports() {
 
       <div style={{ marginBottom: '32px' }}>
         <p style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', margin: '0 0 6px' }}>Export</p>
-        <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--ink)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Reports</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#ffffff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Reports</h1>
         <p style={{ fontSize: '13px', color: 'var(--ink-3)', margin: 0 }}>Generate and download attendance reports as Excel files.</p>
       </div>
 
