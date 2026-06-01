@@ -13,18 +13,18 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const { logout, username } = useAuth();
+  const { logout, username, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    if (username !== 'admin') return;
+    if (!isAuthenticated) return;
     api.getManagerRequests()
       .then(reqs => setPendingCount(reqs.filter(r => r.status === 'Pending').length))
-      .catch(() => {});
-  }, [username, pathname]);
+      .catch(() => setPendingCount(0));
+  }, [isAuthenticated, pathname]);
 
   function handleLogout() { logout(); navigate('/admin/login'); }
 
