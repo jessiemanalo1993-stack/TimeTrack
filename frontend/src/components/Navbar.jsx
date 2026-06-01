@@ -22,12 +22,8 @@ export default function Navbar() {
   useEffect(() => {
     if (!isAuthenticated) return;
     api.getManagerRequests()
-      .then(reqs => {
-        const count = reqs.filter(r => r.status === 'Pending').length;
-        console.log('[Navbar] pending requests:', count, reqs);
-        setPendingCount(count);
-      })
-      .catch(err => { console.error('[Navbar] fetch error:', err); setPendingCount(0); });
+      .then(reqs => setPendingCount(reqs.filter(r => r.status === 'Pending').length))
+      .catch(() => setPendingCount(0));
   }, [isAuthenticated, pathname]);
 
   function handleLogout() { logout(); navigate('/admin/login'); }
@@ -52,7 +48,6 @@ export default function Navbar() {
           <div className="hidden sm:flex" style={{ gap: '2px' }}>
             {navLinks.map(({ to, label }) => {
               const active = pathname === to;
-              const showBadge = to === '/admin/managers';
               return (
                 <Link key={to} to={to} style={{
                   fontSize: '12px',
@@ -76,7 +71,7 @@ export default function Navbar() {
                 onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'var(--ink-3)'; }}
                 >
                   {label}
-                  {to === '/admin/managers' && (
+                  {to === '/admin/managers' && pendingCount > 0 && (
                     <span style={{
                       fontSize: '9px', fontFamily: 'var(--mono)', fontWeight: '700',
                       background: '#fbbf24', color: '#1a1a1a',
